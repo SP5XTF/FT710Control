@@ -1,0 +1,19 @@
+# Budowanie
+.build/
+build/
+dist/
+DerivedData/
+*.xcodeproj/xcuserdata/
+*.xcworkspace/xcuserdata/
+.swiftpm/
+*.xcuserstate
+
+# macOS
+.DS_Store
+._*
+
+# Lokalne pliki - nigdy do repozytorium
+*.p12
+*.cer
+*.mobileprovision
+.env

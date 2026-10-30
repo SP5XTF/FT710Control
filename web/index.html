@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="FT-710">
+<meta name="theme-color" content="#0d1117">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icon-180.png">
+<link rel="icon" type="image/png" href="/icon-192.png">
+<title>FT-710 Control</title>
+<style>
+:root { --bg:#0d1117; --panel:#161b22; --line:#30363d; --text:#e6edf3; --dim:#8b949e; --acc:#2f81f7; --red:#da3633; --green:#3fb950; --amber:#d29922; }
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--text); font: 15px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+body { padding: calc(env(safe-area-inset-top) + 6px) calc(env(safe-area-inset-right) + 10px) calc(env(safe-area-inset-bottom) + 10px) calc(env(safe-area-inset-left) + 10px); max-width: 1500px; margin: 0 auto; -webkit-user-select: none; user-select: none; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 10px; }
+h4 { margin: 0 0 6px; font-size: 11px; letter-spacing: 1px; color: var(--amber); }
+button { background: #21262d; color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 9px 10px; font-size: 14px; touch-action: manipulation; }
+button.on { background: var(--acc); border-color: var(--acc); }
+button:disabled { opacity: .4; }
+input { background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 9px; font-size: 16px; -webkit-user-select: text; user-select: text; }
+input[type=range] { padding: 0; accent-color: var(--acc); }
+.row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.center { justify-content: center; }
+.seg { display: inline-flex; gap: 0; }
+.seg button { border-radius: 0; margin-left: -1px; padding: 8px 11px; }
+.seg button:first-child { border-radius: 8px 0 0 8px; margin-left: 0; }
+.seg button:last-child { border-radius: 0 8px 8px 0; }
+.ctl { display: grid; grid-template-columns: 62px 1fr; gap: 8px; align-items: center; margin: 6px 0; font-size: 13px; }
+.ctl b { color: var(--dim); font-weight: 600; }
+.top { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 13px; color: var(--dim); margin-bottom: 8px; }
+.dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--red); margin-right: 6px; }
+.dot.ok { background: var(--green); }
+#freq { font: 600 clamp(32px, 9vw, 60px) ui-monospace, Menlo, monospace; text-align: center; letter-spacing: 1px; }
+#modeTx { display: flex; justify-content: center; gap: 8px; margin-top: 2px; }
+.badge { padding: 2px 10px; border-radius: 6px; background: #21262d; font-weight: 600; }
+.badge.tx { background: var(--red); }
+.meter { display: grid; grid-template-columns: 50px 1fr 70px; gap: 8px; align-items: center; font-size: 13px; margin: 5px 0; }
+.meter span { text-align: right; font-family: ui-monospace, Menlo, monospace; }
+.bar { height: 10px; background: #21262d; border-radius: 5px; overflow: hidden; }
+.bar > div { height: 100%; width: 0; background: var(--acc); transition: width .08s linear; }
+canvas { width: 100%; display: block; background: #000; image-rendering: pixelated; }
+#traceWrap { position: relative; }
+#spots { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.spot { position: absolute; font: 700 10px -apple-system, sans-serif; color: #000; background: var(--amber); border-radius: 3px; padding: 1px 3px; white-space: nowrap; pointer-events: auto; cursor: pointer; }
+.spot.pota { outline: 1.5px solid var(--green); }
+.tick { position: absolute; width: 1px; background: rgba(210,153,34,.8); pointer-events: none; }
+.tick.pota { background: var(--green); }
+#trace { height: 90px; border-radius: 6px 6px 0 0; }
+#wf { height: 170px; border-radius: 0 0 6px 6px; }
+#axis { display: flex; justify-content: space-between; font: 11px ui-monospace, Menlo, monospace; color: var(--dim); margin-top: 3px; }
+.small { font-size: 12px; color: var(--dim); margin-top: 6px; }
+details { margin-top: 8px; font-size: 12px; color: var(--dim); }
+details summary { cursor: pointer; color: var(--acc); }
+details p { margin: 6px 0 0; }
+#ptt { width: 100%; height: 88px; margin-top: 8px; font-size: 22px; font-weight: 700; letter-spacing: 2px; border-radius: 14px; touch-action: none; }
+#ptt.active { background: var(--red); border-color: var(--red); }
+#msg { color: var(--amber); font-size: 13px; min-height: 18px; margin-top: 6px; }
+.hidden { display: none !important; }
+#login { max-width: 380px; margin: 14vh auto 0; }
+/* Układ: telefon - jedna kolumna; iPad poziomo / komputer - skop szeroko po prawej */
+#grid { display: grid; gap: 10px; grid-template-columns: 1fr;
+  grid-template-areas: "freq" "scope" "meters" "ft8" "log" "bands" "radio" "cw" "cluster" "alerts" "audio"; }
+#pFreq { grid-area: freq; } #pScope { grid-area: scope; } #pMeters { grid-area: meters; }
+#pBands { grid-area: bands; } #pRadio { grid-area: radio; } #pAudio { grid-area: audio; }
+#pLog { grid-area: log; } #pCW { grid-area: cw; } #pCluster { grid-area: cluster; } #pAlerts { grid-area: alerts; }
+#pFT8 { grid-area: ft8; }
+.ft8row { display: grid; grid-template-columns: 54px 30px 40px 1fr; gap: 6px; padding: 4px; border-bottom: 1px solid var(--line); cursor: pointer; font-family: ui-monospace, Menlo, monospace; font-size: 13px; }
+.ft8row:hover { background: #21262d; }
+.ft8row.me { background: rgba(255, 77, 77, 0.18); }
+.sec { border-top: 1px solid var(--line); margin-top: 8px; padding-top: 6px; }
+.sec summary { cursor: pointer; font-size: 11px; letter-spacing: 1px; color: var(--amber); font-weight: 700; }
+.tog { padding: 6px 10px; font-size: 13px; }
+.list { max-height: 260px; overflow-y: auto; font-size: 13px; }
+.item { display: grid; grid-template-columns: 44px 70px 1fr; gap: 6px; padding: 5px 4px; border-bottom: 1px solid var(--line); cursor: pointer; }
+.item:hover { background: #21262d; }
+.pill { color: #000; border-radius: 4px; padding: 0 5px; font-weight: 700; display: inline-block; }
+.mono { font-family: ui-monospace, Menlo, monospace; }
+.dim { color: var(--dim); }
+.lg { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.lg input { width: 100%; }
+@media (min-width: 1000px) {
+  #grid { grid-template-columns: 380px 1fr;
+    grid-template-areas: "freq scope" "meters scope" "bands ft8" "radio ft8" "radio log" "cw cluster" "audio alerts"; }
+  #trace { height: 130px; }
+  #wf { height: 340px; }
+}
+</style>
+</head>
+<body>
+<div id="login" class="panel">
+  <div class="row" style="justify-content:space-between">
+    <h3 style="margin:0" data-t="FT-710 Control – praca zdalna">FT-710 Control – praca zdalna</h3>
+    <button class="langBtn">EN</button>
+  </div>
+  <div class="row" style="margin-top:10px">
+    <input id="pw" type="password" data-tp="Hasło stacji" placeholder="Hasło stacji" autocomplete="current-password" style="flex:1">
+    <button id="loginBtn" class="on" data-t="Połącz">Połącz</button>
+  </div>
+  <div id="loginMsg" style="color:var(--amber);margin-top:8px;font-size:13px"></div>
+</div>
+
+<div id="app" class="hidden">
+  <div class="top">
+    <span><span id="dot" class="dot"></span><span id="conn">…</span></span>
+    <span id="rtt"></span>
+    <span class="row"><button class="langBtn">EN</button><button id="logout" data-t="Rozłącz">Rozłącz</button></span>
+  </div>
+
+  <div id="grid">
+    <div id="pFreq" class="panel">
+      <div id="freq">–</div>
+      <div id="modeTx"><span id="mode" class="badge">–</span><span id="txBadge" class="badge tx hidden">TX</span><span id="splitBadge" class="badge hidden">SPLIT</span></div>
+      <div class="row center small" style="margin-top:4px"><span class="mono" id="vfoA">A –</span><span class="mono" id="vfoB">B –</span></div>
+      <div class="row center" style="margin-top:6px">
+        <button id="vfoAB" class="tog">A=B</button><button id="vfoSwap" class="tog">A↔B</button><button id="ctlSplit" class="tog">SPLIT</button>
+      </div>
+      <div class="row center" style="margin-top:8px" id="tuneRow"></div>
+      <div class="row center" style="margin-top:6px">
+        <input id="freqIn" inputmode="decimal" data-tp="kHz, np. 14074" placeholder="kHz, np. 14074" style="width:160px">
+        <button id="setFreq" data-t="Ustaw">Ustaw</button>
+      </div>
+    </div>
+
+    <div id="pScope" class="panel">
+      <div id="traceWrap"><canvas id="trace" width="850" height="90"></canvas><div id="spots"></div></div>
+      <canvas id="wf" width="850" height="170"></canvas>
+      <div id="axis"><span id="ax0"></span><span id="ax1"></span><span id="ax2"></span><span id="ax3"></span><span id="ax4"></span></div>
+      <div class="small" id="scopeInfo" data-t="Skop RF: brak danych (włącz go na stacji)">Skop RF: brak danych (włącz go na stacji)</div>
+    </div>
+
+    <div id="pMeters" class="panel">
+      <div class="meter"><b>S</b><div class="bar"><div id="sBar"></div></div><span id="sTxt">–</span></div>
+      <div class="meter"><b>PO</b><div class="bar"><div id="poBar"></div></div><span id="poTxt">–</span></div>
+      <div class="meter"><b>COMP</b><div class="bar"><div id="compBar"></div></div><span id="compTxt">–</span></div>
+      <div class="meter"><b>ALC</b><div class="bar"><div id="alcBar"></div></div><span id="alcTxt">–</span></div>
+      <div class="meter"><b>SWR</b><div class="bar"><div id="swrBar"></div></div><span id="swrTxt">–</span></div>
+    </div>
+
+    <div id="pBands" class="panel">
+      <h4 data-t="TRYB">TRYB</h4>
+      <div class="row" id="modes"></div>
+      <h4 style="margin-top:10px" data-t="PASMA">PASMA</h4>
+      <div class="row" id="bands"></div>
+      <div class="small" data-t="Pasmo pamięta ostatnią częstotliwość i tryb (w tej przeglądarce).">Pasmo pamięta ostatnią częstotliwość i tryb (w tej przeglądarce).</div>
+    </div>
+
+    <div id="pRadio" class="panel">
+      <h4 data-t="RADIO">RADIO</h4>
+      <div class="ctl"><b>ATT</b><div class="seg" id="ctlAtt"></div></div>
+      <div class="ctl"><b>IPO</b><div class="seg" id="ctlIpo"></div></div>
+      <div class="ctl"><b>AGC</b><div class="seg" id="ctlAgc"></div></div>
+      <div class="ctl"><b data-t="Moc">Moc</b><div class="row"><input id="ctlPwr" type="range" min="5" max="100" step="1" style="flex:1"><span id="ctlPwrTxt" style="width:48px;text-align:right">–</span></div></div>
+      <div class="ctl" id="ctlKsRow"><b>CW WPM</b><div class="row"><input id="ctlKs" type="range" min="4" max="60" step="1" style="flex:1"><span id="ctlKsTxt" style="width:48px;text-align:right">–</span></div></div>
+      <details class="sec"><summary data-t="ODBIÓR">ODBIÓR</summary><div id="secRX"></div></details>
+      <details class="sec"><summary data-t="FILTR">FILTR</summary><div id="secFilter"></div></details>
+      <details class="sec"><summary data-t="NADAWANIE">NADAWANIE</summary><div id="secTX"></div></details>
+      <details class="sec"><summary data-t="TUNER I PAMIĘCI">TUNER I PAMIĘCI</summary>
+        <div class="row" style="margin-top:6px"><button id="ctlTuner" class="tog">TUNER</button><button id="atuTune" class="tog" data-t="Strój (TUNE)">Strój (TUNE)</button></div>
+        <div class="row" style="margin-top:6px" id="msgRow"></div>
+        <div class="small" data-t="Komunikaty z pamięci radia: CW w trybie CW, głosowe w fonii. Nadawanie - te same warunki co PTT.">Komunikaty z pamięci radia: CW w trybie CW, głosowe w fonii. Nadawanie - te same warunki co PTT.</div>
+      </details>
+    </div>
+
+    <div id="pFT8" class="panel">
+      <h4>FT8 / FT4 <span id="ft8State"></span></h4>
+      <div class="row">
+        <button id="ft8m8" class="tog">FT8</button><button id="ft8m4" class="tog">FT4</button>
+        <button id="ft8dec" class="tog" data-t="Dekodowanie">Dekodowanie</button>
+        <button id="ft8hound" class="tog">Hound</button>
+      </div>
+      <div class="row" id="ft8Bands" style="margin-top:6px"></div>
+      <div class="small mono" id="ft8Next" style="margin-top:6px"></div>
+      <div class="row" style="margin-top:6px">
+        <button id="ft8cq" class="tog">CQ</button><button id="ft8tx" class="tog" data-t="Włącz TX">Włącz TX</button><button id="ft8stop" class="tog">STOP</button>
+      </div>
+      <div class="small" data-t="Dotknięcie komunikatu - wołanie stacji i włączenie TX (jak dwuklik na Macu). Nadawanie - te same warunki co PTT; po rozłączeniu przeglądarki TX FT8 się wyłącza.">Dotknięcie komunikatu - wołanie stacji i włączenie TX (jak dwuklik na Macu). Nadawanie - te same warunki co PTT; po rozłączeniu przeglądarki TX FT8 się wyłącza.</div>
+      <div class="list" id="ft8List" style="max-height:340px;margin-top:6px"></div>
+    </div>
+
+    <div id="pLog" class="panel">
+      <h4 data-t="DZIENNIK">DZIENNIK</h4>
+      <div class="row"><input id="logCall" class="mono" data-tp="Znak" placeholder="Znak" autocapitalize="characters" autocomplete="off" style="flex:1;text-transform:uppercase"><button id="logSave" class="on" data-t="Zapisz">Zapisz</button></div>
+      <div class="small" id="logInfo"></div>
+      <div class="lg" style="margin-top:6px">
+        <input id="logRstS" data-tp="RST wysłany" placeholder="RST wysłany"><input id="logRstR" data-tp="RST odebrany" placeholder="RST odebrany">
+        <input id="logName" data-tp="Imię" placeholder="Imię"><input id="logQth" data-tp="QTH" placeholder="QTH">
+        <input id="logGrid" data-tp="Lokator" placeholder="Lokator"><input id="logComment" data-tp="Uwagi" placeholder="Uwagi">
+      </div>
+      <div class="small" data-t="Częstotliwość i tryb z radia; zapis jak w programie (wysyłka do serwisów według ustawień).">Częstotliwość i tryb z radia; zapis jak w programie (wysyłka do serwisów według ustawień).</div>
+      <h4 style="margin-top:10px" data-t="OSTATNIE QSO">OSTATNIE QSO</h4>
+      <div class="list" id="recent"></div>
+    </div>
+
+    <div id="pCW" class="panel hidden">
+      <h4>CW</h4>
+      <div class="row"><input id="cwText" class="mono" data-tp="Tekst do nadania" placeholder="Tekst do nadania" autocapitalize="characters" style="flex:1;text-transform:uppercase"><button id="cwSend" class="on" data-t="Nadaj">Nadaj</button><button id="cwStop">STOP</button></div>
+      <div class="row" style="margin-top:6px" id="cwMacros"></div>
+    </div>
+
+    <div id="pCluster" class="panel">
+      <h4>DX CLUSTER <span class="dim" id="clusterState"></span></h4>
+      <div class="list" id="clusterList"></div>
+    </div>
+
+    <div id="pAlerts" class="panel">
+      <h4 data-t="ALERTY">ALERTY</h4>
+      <div class="list" id="alertList"></div>
+    </div>
+
+    <div id="pAudio" class="panel">
+      <div class="row">
+        <button id="audioBtn" class="on" data-t="Włącz audio">Włącz audio</button>
+        <span class="small" style="margin:0" data-t="Głośność">Głośność</span>
+        <input id="vol" type="range" min="0" max="2" step="0.05" value="1" style="flex:1">
+      </div>
+      <div class="small" id="audioInfo"></div>
+      <div id="msg"></div>
+      <button id="ptt" disabled data-t="PTT – przytrzymaj">PTT – przytrzymaj</button>
+      <div class="small" id="pttHint"></div>
+      <details>
+        <summary data-t="Pomoc i test dźwięku">Pomoc i test dźwięku</summary>
+        <div class="row" style="margin-top:6px">
+          <button id="beepBtn" data-t="Test dźwięku">Test dźwięku</button>
+          <span class="small" id="audioDiag" style="margin:0;font-family:ui-monospace,Menlo,monospace"></span>
+        </div>
+        <p data-t="Brak dźwięku na iPhonie? Sprawdź głośność przyciskami z boku. Strona próbuje grać także w trybie cichym; gdyby to nie działało, wyłącz tryb cichy.">Brak dźwięku na iPhonie? Sprawdź głośność przyciskami z boku. Strona próbuje grać także w trybie cichym; gdyby to nie działało, wyłącz tryb cichy.</p>
+        <p data-t="Nadajnik działa tylko podczas trzymania przycisku. Przerwa w łączności dłuższa niż 0,5 s wyłącza nadawanie na stacji. Używaj słuchawek.">Nadajnik działa tylko podczas trzymania przycisku. Przerwa w łączności dłuższa niż 0,5 s wyłącza nadawanie na stacji. Używaj słuchawek.</p>
+        <p data-t="Na iPhonie: Udostępnij → Do ekranu początkowego - panel otwiera się wtedy jak aplikacja, na całym ekranie.">Na iPhonie: Udostępnij → Do ekranu początkowego - panel otwiera się wtedy jak aplikacja, na całym ekranie.</p>
+      </details>
+    </div>
+  </div>
+</div>
+<script src="/app.js"></script>
+</body>
+</html>

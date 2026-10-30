@@ -1,0 +1,130 @@
+FT-710 Control - wersja beta @VERSION@ (zbudowana @DATE@, @ARCH@)
+=====================================================================
+
+Program do sterowania radiem Yaesu FT-710 z komputera Mac: CAT, dźwięk USB, skop RF
+i waterfall, FT8/FT4 (odbiór, nadawanie, PSKReporter), dziennik łączności (QRZ, LoTW, eQSL,
+Club Log i inne) z pobieraniem potwierdzeń QSL, dyplomami (DXCC, WAZ, WPX, VUCC, POTA)
+i mapą łączności 3D, zawody (osobny log, Cabrillo), DX Cluster, POTA, alerty, SSTV, CW, RTTY,
+filtry audio (redukcja szumu, ANF, NB, APF, korektor), propagacja, praca zdalna z przeglądarki
+(iPhone, iPad).
+
+To WERSJA BETA (publiczna) - może zawierać błędy. Nadawanie (FT8, CW, RTTY, SSTV) testuj najpierw
+na sztucznym obciążeniu i z małą mocą.
+
+
+1. WYMAGANIA
+------------
+- Mac z macOS 13 Ventura lub nowszym. Ten obraz zawiera wersję dla: @ARCH_TEXT@.
+- Radio FT-710 połączone z Makiem kablem USB.
+- Sterownik portu CAT jest wbudowany w macOS - nic nie trzeba instalować. Radio pojawi
+  się jako para portów /dev/cu.usbserial-...
+
+
+2. INSTALACJA
+-------------
+Przeciągnij FT710Control na ikonę folderu „Aplikacje” w tym oknie.
+
+
+3. PIERWSZE URUCHOMIENIE
+------------------------
+Program nie jest podpisany certyfikatem Apple, więc macOS za pierwszym razem go zablokuje.
+
+macOS 15 Sequoia i nowsze:
+  1. Otwórz FT710Control w folderze Aplikacje - pojawi się ostrzeżenie, kliknij „Gotowe”.
+  2. Ustawienia systemowe -> Prywatność i ochrona -> przewiń na dół do sekcji „Ochrona”.
+  3. Przy komunikacie o FT710Control kliknij „Otwórz mimo to” i podaj hasło.
+macOS 13-14:
+  Kliknij FT710Control prawym przyciskiem -> Otwórz -> Otwórz.
+Albo w Terminalu (każda wersja macOS):
+  xattr -dr com.apple.quarantine /Applications/FT710Control.app
+
+Przy pierwszym uruchomieniu program poprosi o:
+- dostęp do MIKROFONU - to dźwięk z radia przez USB (odsłuch, widmo, dekodery). Zezwól.
+- dostęp do PĘKU KLUCZY (hasła QRZ, LoTW...) - wybierz „Zawsze pozwalaj”.
+- dostęp do SIECI LOKALNEJ (CAT Share, praca zdalna) - zezwól, jeśli z nich korzystasz.
+- POWIADOMIENIA (przy pierwszym alercie: ktoś Cię woła, nowy kraj, nowe potwierdzenia) - zezwól,
+  jeśli chcesz je dostawać także przy innym oknie na wierzchu.
+Na początku program poprosi też o dane stacji (znak, lokator) - potrzebne m.in. do dziennika
+i propagacji.
+
+
+4. USTAWIENIA RADIA
+-------------------
+MENU -> OPERATION SETTING -> GENERAL:
+- CAT RATE = 38400
+- SCU-LAN10 = ON (tylko dla skopu RF), potem odłącz i podłącz kabel USB.
+Nadawanie CW z komputera (opcjonalnie), zakładka CW -> „Sprawdź radio” sprawdza to samo:
+- metoda „Linia DTR/RTS”: CW SETTING -> MODE CW -> PC KEYING = DTR, BK-IN włączony;
+- metoda „Klucz radia (CAT)”: klucz radia włączony (KEYER), typ klucza inny niż OFF.
+RTTY i emisje cyfrowe: tryb DATA-L (zakładka RTTY ma przycisk „Ustaw radio: DATA-L”).
+FT8/FT4: program sam ustawia DATA-U i częstotliwość przyciskami pasm. ZEGAR MACA musi być
+dokładny (Ustawienia systemowe -> Ogólne -> Data i czas -> ustawiaj automatycznie) - zakładka
+FT8/FT4 pokazuje różnicę względem czasu wzorcowego; przy ponad 1 s łączności się nie udają.
+
+
+5. DODATKOWE PLIKI - tylko dla wybranych funkcji
+------------------------------------------------
+a) SKOP RF (widmo i waterfall z radia) - biblioteki FTDI (darmowe):
+   - sterownik D2XX dla macOS:   https://ftdichip.com/drivers/d2xx-drivers/   (plik libftd2xx...dylib)
+   - biblioteka LibFT4222 dla macOS: ftdichip.com -> Products -> FT4222H -> Software Examples
+     -> „LibFT4222 for Mac”   (plik libft4222...dylib)
+   Instalacja w Terminalu (w folderze z rozpakowanymi plikami):
+     sudo mkdir -p /usr/local/lib
+     sudo cp libftd2xx*.dylib libft4222*.dylib /usr/local/lib/
+     sudo xattr -d com.apple.quarantine /usr/local/lib/libft*.dylib
+   Bez tego program działa normalnie - nie ma tylko skopu RF.
+
+b) LoTW - program TQSL (ARRL): https://www.arrl.org/tqsl-download
+   Zainstaluj w folderze Aplikacje (TrustedQSL) i dodaj swój certyfikat LoTW. Jeśli certyfikat
+   ma hasło, TQSL zapyta o nie w swoim okienku przy podpisywaniu (program domyślnie go nie
+   przekazuje). Do POBIERANIA potwierdzeń potrzebne są login i hasło do strony lotw.arrl.org
+   (Usługi online -> LoTW) - to nie jest hasło certyfikatu.
+
+c) QRZ.com - konto na qrz.com; pełne dane stacji wymagają subskrypcji XML, a pobieranie
+   potwierdzeń z dziennika QRZ - subskrypcji dziennika.
+
+   Bez subskrypcji QRZ: HamQTH.com (bezpłatnie) - imię, QTH, lokator, kraj; konto zakłada się
+   na hamqth.com, a wpisuje w Profilu stacji (działa samo albo uzupełnia dane z QRZ).
+
+d) Club Log - wysyłka i potwierdzenia wymagają klucza API programu (napisz do autora - kontakt
+   na końcu) i hasła aplikacji z ustawień konta na clublog.org.
+
+e) WSJT-X / JTDX (opcjonalnie):
+   - łączności do dziennika: WSJT-X -> Settings -> Reporting -> UDP Server 127.0.0.1, port 2237;
+   - sterowanie radiem przez program (CAT Share): w WSJT-X radio „Hamlib NET rigctl”,
+     Network Server 127.0.0.1:4532 (w FT-710 Control włącz zakładkę CAT SHARE).
+
+
+6. CO NOWEGO W TEJ WERSJI - warto sprawdzić
+-------------------------------------------
+- Płynność: skop i waterfall bez szarpania także na pełnym ekranie (licznik „opóźnienie” na
+  pasku stanu powinien pokazywać kilkadziesiąt ms lub mniej).
+- Skop: palety Turbo (SDR) i Inferno, wypełnienie kolorami palety, peak hold, skala dB, znaczniki
+  czasu na waterfallu, pasek planu pasma (zakładka EKRAN).
+- Dziennik: filtry (pasmo, emisja, okres), sortowanie kolumn, Statystyki…, Mapa łączności (kula
+  3D), dyplomy IOTA/SOTA/WWFF/PGA, usuwanie łączności także w Club Log i QRZ, HamQTH.
+- Dziennik w zakładkach SSTV, CW i RTTY (kolumna po prawej).
+- FT8: wybór wołającego (najdalej / najsilniejszy…), limit wywołań, „po QSO następny wołający” -
+  przycisk „Opcje…” w panelu nadawania.
+- FT8 Hound: praca z DXpedycjami w trybie Fox/Hound (przełącznik „Hound” w panelu nadawania;
+  opis w Pomocy, temat FT8).
+- Zawody: osobny log z edycją, „Poprzednie zawody…”, duble na skopie, spot na DX Cluster.
+- Praca zdalna z przeglądarki: VFO, filtry, TX, tuner, komunikaty M1-M5, dziennik, CW, klaster,
+  alerty, FT8/FT4 (dotknięcie komunikatu = wołanie).
+- Praca zdalna przez internet bez Tailscale: tunel Cloudflare (zakładka ZDALNIE; na Macu
+  „brew install cloudflared”, na telefonie sama przeglądarka, kod QR z adresem).
+- Pasek stanu: głośność odsłuchu z wyciszeniem.
+
+7. ZGŁASZANIE BŁĘDÓW
+--------------------
+Przyślij: wersję programu (@VERSION@), wersję macOS, model Maca, opis (co robiłeś, co się
+stało, czego się spodziewałeś) i zrzut ekranu. Przy problemach z radiem dołącz zawartość
+zakładki LOG CAT, a przy skopie - „Diagnostyka USB” i „Log” skopu.
+Pomoc w programie: menu Pomoc (Cmd-?).
+Zgłoszenia i nowe wersje: https://github.com/sp5xtf/FT710Control (Issues, Releases).
+Program sam sprawdza nowe wersje (menu FT710Control -> Sprawdź aktualizacje…).
+Kontakt: @CONTACT@
+
+
+Yaesu i FT-710 są znakami towarowymi Yaesu Musen Co., Ltd. FT-710 Control jest niezależnym
+programem, niezwiązanym z firmą Yaesu. Licencje użytych komponentów: plik „Licencje.txt”.

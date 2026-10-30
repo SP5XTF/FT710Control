@@ -1,0 +1,1 @@
+ft8_lib commit 9fec6ca39886edbf96f4f5e71edc76da5074e871 (Sun Aug 24 07:55:25 2025 +0300), https://github.com/kgoba/ft8_lib — pliki ft8/, fft/, common/monitor.*, common/common.h bez zmian, poza jedną linią w common/monitor.c (LOG_LEVEL LOG_ERROR zamiast LOG_INFO)
