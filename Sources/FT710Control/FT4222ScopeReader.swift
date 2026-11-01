@@ -31,6 +31,9 @@ final class FT4222ScopeReader: @unchecked Sendable {
         case opened(libraryPath: String)
         case frame(Frame)
         case log(String)
+        /// Odzyskiwanie połączenia (komunikat do nagłówka skopu) i jego powodzenie.
+        case recovering(String)
+        case recovered(String)
         case error(String)
         case stopped
     }
@@ -122,7 +125,6 @@ final class FT4222ScopeReader: @unchecked Sendable {
         emit(.opened(libraryPath: lib?.path ?? "?"))
 
         var syncFails = 0
-        var reinitCount = 0
         var frameReady = false   // true: `frame` zawiera już zweryfikowaną ramkę z resync()
 
         while isRunning {
@@ -131,17 +133,8 @@ final class FT4222ScopeReader: @unchecked Sendable {
                     syncFails += 1
                     if syncFails >= 5 {
                         syncFails = 0
-                        reinitCount += 1
-                        emit(.log(L("Powtarzające się błędy odczytu - ponowne otwarcie ({1})", reinitCount)))
-                        guard reinitCount <= 20, openDevice() == nil else {
-                            emit(.error(L("Nie udało się ponownie otworzyć FT4222")))
-                            return
-                        }
-                        switch resync() {
-                        case .found: frameReady = true
-                        case .readError: emit(.error(L("Błąd odczytu podczas synchronizacji"))); return
-                        case .notFound: break
-                        }
+                        emit(.recovering(L("Powtarzające się błędy odczytu - odzyskiwanie połączenia")))
+                        frameReady = recover()
                     }
                     continue
                 }
@@ -154,19 +147,8 @@ final class FT4222ScopeReader: @unchecked Sendable {
                     syncFails = 0
                     emit(.log(L("Utracona synchronizacja ramek - szukam początku ramki")))
                     switch resync() {
-                    case .found:
-                        frameReady = true
-                    case .readError, .notFound:
-                        reinitCount += 1
-                        guard reinitCount <= 20, openDevice() == nil else {
-                            emit(.error(L("Nie udało się odzyskać synchronizacji z radiem")))
-                            return
-                        }
-                        switch resync() {
-                        case .found: frameReady = true
-                        case .readError: emit(.error(L("Błąd odczytu podczas synchronizacji"))); return
-                        case .notFound: break
-                        }
+                    case .found: frameReady = true
+                    case .readError, .notFound: frameReady = recover()
                     }
                 }
                 continue
@@ -174,6 +156,49 @@ final class FT4222ScopeReader: @unchecked Sendable {
             syncFails = 0
             if let parsed = parseFrame() { emit(.frame(parsed)) }
         }
+    }
+
+    /// Odzyskiwanie połączenia ze skopem - bez limitu prób, dopóki skop jest włączony (wcześniej po 20 problemach
+    /// w ciągu całej sesji albo po jednym błędzie odczytu przy synchronizacji czytnik kończył pracę na stałe
+    /// i pomagał tylko restart radia). Odstępy rosnące: 1, 2, 5, 10, potem co 30 s; co trzecia próba -
+    /// sprzętowy reset układu FT4222 (jeśli biblioteka go ma). true - w `frame` jest zsynchronizowana ramka.
+    private func recover() -> Bool {
+        let delays: [Double] = [1, 2, 5, 10, 30]
+        var attempt = 0
+        while isRunning {
+            attempt += 1
+            if attempt % 3 == 0, let reset = lib?.chipReset, openDevice() == nil, let handle = device {
+                emit(.recovering(L("Reset układu FT4222 (próba {1})", attempt)))
+                _ = reset(handle)
+                closeDevice()
+                guard pause(2) else { return false }        // układ zgłasza się na USB od nowa
+            }
+            if openDevice() == nil {
+                switch resync() {
+                case .found:
+                    if attempt > 1 { emit(.recovered(L("Połączenie ze skopem odzyskane (próba {1})", attempt))) }
+                    return true
+                case .notFound:
+                    return false                             // urządzenie działa - dalej zwykły odczyt
+                case .readError:
+                    break
+                }
+            }
+            emit(.recovering(L("Odzyskiwanie połączenia ze skopem - próba {1} nieudana", attempt)))
+            guard pause(delays[min(attempt - 1, delays.count - 1)]) else { return false }
+        }
+        return false
+    }
+
+    /// Czekanie w krótkich odcinkach - wyłączenie skopu przerywa od razu. false - skop wyłączony.
+    private func pause(_ seconds: Double) -> Bool {
+        var left = seconds
+        while left > 0 {
+            guard isRunning else { return false }
+            usleep(100_000)
+            left -= 0.1
+        }
+        return isRunning
     }
 
     // MARK: - Urządzenie

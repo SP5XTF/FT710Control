@@ -100,6 +100,14 @@ final class RFScopeController: ObservableObject {
             frameSink?(frame)
         case .log(let message):
             appendLog(message)
+        case .recovering(let message):
+            // odzyskiwanie połączenia - widoczne w nagłówku skopu, nie tylko w dzienniku „Log”
+            appendLog(message)
+            status = message
+            if receiving { receiving = false }
+        case .recovered(let message):
+            appendLog(message)
+            status = L("Połączono z FT4222, czekam na ramki…")
         case .error(let message):
             failed = true
             status = L("Błąd: {1}", message)

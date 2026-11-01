@@ -21,6 +21,7 @@ final class FT4222Library {
     typealias FT4222_SPIMaster_Init = @convention(c) (Handle?, Int32, Int32, Int32, Int32, UInt8) -> UInt32
     typealias FT4222_SPIMaster_SingleRead = @convention(c) (Handle?, UnsafeMutablePointer<UInt8>?, UInt16, UnsafeMutablePointer<UInt16>?, Int32) -> UInt32
     typealias FT4222_SetClock = @convention(c) (Handle?, Int32) -> UInt32
+    typealias FT4222_ChipReset = @convention(c) (Handle?) -> UInt32
 
     let path: String
     let openEx: FT_OpenEx
@@ -32,6 +33,8 @@ final class FT4222Library {
     let spiMasterInit: FT4222_SPIMaster_Init
     let spiMasterSingleRead: FT4222_SPIMaster_SingleRead
     let setClock: FT4222_SetClock
+    /// Sprzętowy reset układu FT4222 (opcjonalny - starsze wersje biblioteki mogą go nie mieć).
+    let chipReset: FT4222_ChipReset?
 
     enum LoadError: LocalizedError {
         case notFound([String])
@@ -82,7 +85,8 @@ final class FT4222Library {
             unInitialize: try symbol("FT4222_UnInitialize", FT4222_UnInitialize.self),
             spiMasterInit: try symbol("FT4222_SPIMaster_Init", FT4222_SPIMaster_Init.self),
             spiMasterSingleRead: try symbol("FT4222_SPIMaster_SingleRead", FT4222_SPIMaster_SingleRead.self),
-            setClock: try symbol("FT4222_SetClock", FT4222_SetClock.self))
+            setClock: try symbol("FT4222_SetClock", FT4222_SetClock.self),
+            chipReset: try? symbol("FT4222_ChipReset", FT4222_ChipReset.self))
         cached = lib
         return lib
     }
@@ -90,7 +94,8 @@ final class FT4222Library {
     private init(path: String, openEx: FT_OpenEx, close: FT_Close, setTimeouts: FT_SetTimeouts,
                  setLatencyTimer: FT_SetLatencyTimer, purge: FT_Purge, unInitialize: FT4222_UnInitialize,
                  spiMasterInit: FT4222_SPIMaster_Init, spiMasterSingleRead: FT4222_SPIMaster_SingleRead,
-                 setClock: FT4222_SetClock) {
+                 setClock: FT4222_SetClock, chipReset: FT4222_ChipReset?) {
+        self.chipReset = chipReset
         self.path = path
         self.openEx = openEx
         self.close = close
