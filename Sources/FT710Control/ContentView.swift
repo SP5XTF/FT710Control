@@ -700,13 +700,16 @@ struct ContentView: View {
     /// Prawa kolumna; blok TX dosunięty do dołu (równo z dołem waterfalla), a gdy okno jest za niskie -
     /// cała kolumna przewija się wewnątrz.
     private var rightColumn: some View {
-        ViewThatFits(in: .vertical) {
-            rightColumnContent(pinTXToBottom: true)
+        // Jedna kopia zawartości, bez ViewThatFits: ten na zmianę tworzył i usuwał widoki wariantu przewijanego,
+        // a z nimi obserwatory ustawień (@AppStorage → UserDefaults KVO); po godzinach pracy tablica obserwatorów
+        // się psuła i program się zamykał (raport awarii: EXC_BAD_ACCESS w addObserver:forKeyPath:).
+        // Zawsze przewijana; minimalna wysokość = widoczny obszar, więc blok TX dosunięty do dołu, gdy się mieści.
+        GeometryReader { geometry in
             ScrollView(.vertical, showsIndicators: false) {
-                rightColumnContent(pinTXToBottom: false)
+                rightColumnContent(pinTXToBottom: true)
+                    .frame(minHeight: geometry.size.height, alignment: .top)
             }
         }
-        .frame(maxHeight: .infinity, alignment: .top)
     }
 
     private func rightColumnContent(pinTXToBottom: Bool) -> some View {
