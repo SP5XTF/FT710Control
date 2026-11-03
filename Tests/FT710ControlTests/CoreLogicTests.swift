@@ -1,4 +1,5 @@
 import XCTest
+import SwiftUI
 import FTX
 @testable import FT710Control
 
@@ -643,6 +644,27 @@ final class CoreLogicTests: XCTestCase {
         XCTAssertEqual(ManualQSOView.defaultFrequency(band: "23cm", mode: "SSB"), "1296.200")
         XCTAssertNil(Bands.name(for: 145_500_000), "tabela FT-710 nie zna 2 m - dlatego okno bierze pasmo z tabeli ADIF")
         XCTAssertEqual(LogFrequency.band(for: 1_296_200_000), "23cm")
+    }
+
+    /// Dane z QRZ po zmianie znaku: pola wypełnione automatycznie są czyszczone, poprawione ręcznie zostają.
+    func testQRZAutoFillClearsOnCallChange() {
+        var name = "", qth = "", grid = ""
+        let nameBinding = Binding(get: { name }, set: { name = $0 })
+        let qthBinding = Binding(get: { qth }, set: { qth = $0 })
+        let gridBinding = Binding(get: { grid }, set: { grid = $0 })
+        var auto = QRZAutoFill()
+        // „SP5X” - dane innej stacji
+        name = "Jan"; auto.filled("name", name)
+        qth = "Radom"; auto.filled("qth", qth)
+        grid = "KO01"; auto.filled("grid", grid)
+        name = "Janek"                                        // imię poprawione ręcznie
+        auto.clear([("name", nameBinding), ("qth", qthBinding), ("grid", gridBinding)])
+        XCTAssertEqual(name, "Janek", "poprawione ręcznie zostaje")
+        XCTAssertEqual(qth, "", "z QRZ - wyczyszczone")
+        XCTAssertEqual(grid, "", "z QRZ - wyczyszczone")
+        qth = "Warszawa"                                      // wpisane ręcznie (bez filled) - nigdy nie czyścimy
+        auto.clear([("qth", qthBinding)])
+        XCTAssertEqual(qth, "Warszawa")
     }
 
     // MARK: - HamQTH

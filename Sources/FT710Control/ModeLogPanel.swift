@@ -21,6 +21,7 @@ struct ModeLogPanel: View {
     @State private var startedAt: Date?
     @State private var message: String?
     @State private var lastAutoComment = ""
+    @State private var autoFill = QRZAutoFill()
 
     private var preset: LogModePreset {
         LogModePreset.all.first { $0.label == presetLabel } ?? LogModePreset.forRadio(cat.modeCode)
@@ -73,9 +74,9 @@ struct ModeLogPanel: View {
         .onChange(of: lookup.record) { record in
             guard let record, record.call == QRZClient.baseCall(call) else { return }
             let away = OperatingLocation.isAwayFromHome(call)
-            if name.isEmpty { name = record.firstName.isEmpty ? record.displayName : record.firstName }
-            if !away, qth.isEmpty { qth = record.city }
-            if !away, grid.isEmpty { grid = record.grid.uppercased() }
+            if name.isEmpty { name = record.firstName.isEmpty ? record.displayName : record.firstName; autoFill.filled("name", name) }
+            if !away, qth.isEmpty { qth = record.city; autoFill.filled("qth", qth) }
+            if !away, grid.isEmpty { grid = record.grid.uppercased(); autoFill.filled("grid", grid) }
         }
         .onChange(of: autoComment) { text in
             // np. tryb odebranego obrazka SSTV - do uwag, jeśli są puste albo zawierają poprzednią automatyczną treść
@@ -100,6 +101,7 @@ struct ModeLogPanel: View {
 
     private func callChanged(_ value: String) {
         let cleaned = value.uppercased().filter { !$0.isWhitespace }
+        if cleaned != call { autoFill.clear([("name", $name), ("qth", $qth), ("grid", $grid)]) }
         call = cleaned
         message = nil
         if startedAt == nil, !cleaned.isEmpty { startedAt = Date() }

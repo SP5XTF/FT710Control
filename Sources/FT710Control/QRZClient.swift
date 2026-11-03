@@ -1,5 +1,6 @@
 import Foundation
 import CoreLocation
+import SwiftUI
 
 /// Dane stacji z QRZ.com (pola interfejsu XML; bez subskrypcji QRZ część pól jest pusta).
 struct QRZRecord: Equatable {
@@ -452,5 +453,28 @@ final class CallLookup: ObservableObject {
         if let grid = record?.grid, !grid.isEmpty { return grid }
         if let gridHint, !gridHint.isEmpty { return gridHint }
         return record?.coordinate.map { Geo.grid(for: $0) } ?? ""
+    }
+}
+
+/// Pola formularza wypełnione automatycznie z QRZ/HamQTH. Po zmianie znaku (niepełny albo błędny znak, np. „SP5X”)
+/// pola z danymi poprzedniego znaku są czyszczone - o ile nie poprawiono ich ręcznie - żeby dane nowego znaku mogły
+/// wejść (wcześniej formularz wypełniał tylko puste pola i zostawały dane pierwszej znalezionej stacji).
+struct QRZAutoFill {
+    private var values: [String: String] = [:]                // pole → wartość wpisana automatycznie
+
+    /// Zapamiętaj wartość wpisaną automatycznie.
+    mutating func filled(_ field: String, _ value: String) {
+        if !value.isEmpty { values[field] = value }
+    }
+
+    /// Pole nadal ma wartość z QRZ (nie poprawione ręcznie) - przy zmianie znaku do wyczyszczenia.
+    func isAutomatic(_ field: String, current: String) -> Bool {
+        !current.isEmpty && values[field] == current
+    }
+
+    /// Zmiana znaku: wyczyść pola z danymi poprzedniego znaku (ręcznie poprawione zostają).
+    mutating func clear(_ fields: [(name: String, value: Binding<String>)]) {
+        for field in fields where isAutomatic(field.name, current: field.value.wrappedValue) { field.value.wrappedValue = "" }
+        values.removeAll()
     }
 }

@@ -218,14 +218,22 @@ makeButton("STOP", () => send({ t: "msgstop" }), $("msgRow")).classList.add("tog
 
 // ---------- Dziennik ----------
 let lookupTimer = null;
+// pola wypełnione z QRZ - przy zmianie znaku czyszczone, jeśli nie poprawione ręcznie (np. po niepełnym „SP5X”)
+let autoFilled = {};
+function clearAutoFilled() {
+  for (const id in autoFilled) { if ($(id).value === autoFilled[id]) $(id).value = ""; }
+  autoFilled = {};
+}
 function setLogCall(call) {
   $("logCall").value = call;
   ["logName", "logQth", "logGrid"].forEach((id) => { $(id).value = ""; });
+  autoFilled = {};
   $("logInfo").textContent = "";
   if (call.length >= 3) send({ t: "lookup", call });
 }
 $("logCall").addEventListener("input", () => {
   $("logCall").value = $("logCall").value.toUpperCase().replace(/\s/g, "");
+  clearAutoFilled();
   clearTimeout(lookupTimer);
   const call = $("logCall").value;
   if (call.length >= 3) lookupTimer = setTimeout(() => send({ t: "lookup", call }), 700);
@@ -475,14 +483,15 @@ function onJSON(m) {
         const parts = [m.name, m.qth, m.grid, m.country].filter((x) => x);
         parts.push(m.worked > 0 ? T("było") + ": " + m.worked + " QSO (" + m.bands + ")" : T("nowa stacja"));
         $("logInfo").textContent = parts.join(" · ");
-        if (m.name && !$("logName").value) $("logName").value = m.name;
-        if (m.qth && !$("logQth").value) $("logQth").value = m.qth;
-        if (m.grid && !$("logGrid").value) $("logGrid").value = m.grid;
+        [["logName", m.name], ["logQth", m.qth], ["logGrid", m.grid]].forEach(([id, v]) => {
+          if (v && !$(id).value) { $(id).value = v; autoFilled[id] = v; }
+        });
       }
       break;
     case "logged":
       msg(T("Zapisano") + " " + m.call + " " + m.time + " UTC");
       ["logCall", "logName", "logQth", "logGrid", "logComment", "logRstS", "logRstR"].forEach((id) => { $(id).value = ""; });
+      autoFilled = {};
       $("logInfo").textContent = "";
       break;
     case "recent":

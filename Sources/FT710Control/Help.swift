@@ -387,6 +387,7 @@ The **DISPLAY** tab changes how the RF scope looks. Changes appear on the scope 
 • **Odbieraj QSO z WSJT-X / JTDX** – w WSJT-X: Settings → Reporting → UDP Server `127.0.0.1`, port `2237`.
 
 Dane: `~/Library/Application Support/FT710Control/logbook.json` (kopia przy każdym uruchomieniu).
+• **Dane z QRZ przy wpisywaniu znaku** (formularz dziennika, „Dodaj QSO…”, SSTV/CW/RTTY, panel zdalny): imię, QTH i lokator wpisują się same. Po zmianie znaku (niepełny „SP5X”, poprawka ostatniej litery) dane poprzedniego znaku znikają, a wchodzą dane nowego – pola poprawione ręcznie zostają bez zmian.
 
 **Ręczne dodanie QSO** (okno dziennika → **Dodaj QSO…**)
 • Np. łączności z drugiego radia na **2 m, 70 cm, 23 cm** (albo HF): znak z QRZ/HamQTH, **data i godzina UTC**, **pasmo** (160 m … 3 cm) z podpowiedzią typowej częstotliwości dla emisji (do zmiany; częstotliwość musi leżeć w paśmie), **emisja** (także MSK144 i Q65), RST, imię, QTH, **lokator** (z nim łączność liczy się do VUCC), uwagi.
@@ -441,6 +442,7 @@ Dane: `~/Library/Application Support/FT710Control/logbook.json` (kopia przy każ
 • **Receive QSOs from WSJT-X / JTDX** – in WSJT-X: Settings → Reporting → UDP Server `127.0.0.1`, port `2237`.
 
 Data: `~/Library/Application Support/FT710Control/logbook.json` (backed up at every start).
+• **QRZ data while typing a call** (log form, “Add QSO…”, SSTV/CW/RTTY, remote panel): name, QTH and locator fill in themselves. After the call changes (an incomplete “SP5X”, correcting the last letter) the previous call's data is removed and the new call's data comes in – fields you corrected by hand stay unchanged.
 
 **Adding a QSO manually** (log window → **Add QSO…**)
 • E.g. QSOs from a second radio on **2 m, 70 cm, 23 cm** (or HF): call with QRZ/HamQTH, **UTC date and time**, **band** (160 m … 3 cm) with a suggested typical frequency for the mode (editable; the frequency must lie in the band), **mode** (also MSK144 and Q65), RST, name, QTH, **locator** (with it the QSO counts for VUCC), comment.

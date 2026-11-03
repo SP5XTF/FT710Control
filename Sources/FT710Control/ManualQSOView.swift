@@ -27,6 +27,7 @@ struct ManualQSOView: View {
     @State private var comment = ""
     @State private var message: String?
     @State private var savedCount = 0
+    @State private var autoFill = QRZAutoFill()
 
     static let bands = ["160m", "80m", "60m", "40m", "30m", "20m", "17m", "15m", "12m", "10m",
                         "6m", "4m", "2m", "70cm", "23cm", "13cm", "3cm"]
@@ -133,9 +134,9 @@ struct ManualQSOView: View {
         .onChange(of: lookup.record) { record in
             guard let record, record.call == QRZClient.baseCall(call) else { return }
             let away = OperatingLocation.isAwayFromHome(call)
-            if name.isEmpty { name = record.firstName.isEmpty ? record.displayName : record.firstName }
-            if !away, qth.isEmpty { qth = record.city }
-            if !away, grid.isEmpty { grid = record.grid.uppercased() }
+            if name.isEmpty { name = record.firstName.isEmpty ? record.displayName : record.firstName; autoFill.filled("name", name) }
+            if !away, qth.isEmpty { qth = record.city; autoFill.filled("qth", qth) }
+            if !away, grid.isEmpty { grid = record.grid.uppercased(); autoFill.filled("grid", grid) }
         }
     }
 
@@ -152,7 +153,9 @@ struct ManualQSOView: View {
     }
 
     private func callChanged(_ value: String) {
-        call = value.uppercased().filter { !$0.isWhitespace }
+        let cleaned = value.uppercased().filter { !$0.isWhitespace }
+        if cleaned != call { autoFill.clear([("name", $name), ("qth", $qth), ("grid", $grid)]) }
+        call = cleaned
         message = nil
         if QRZClient.baseCall(call).count >= 3, AppServices.shared.qrz.canLookup {
             lookup.request(call, using: AppServices.shared.qrz, debounce: true)

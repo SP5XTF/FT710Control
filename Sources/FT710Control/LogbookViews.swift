@@ -103,18 +103,24 @@ struct QuickLogView: View {
             } else if draft.startedAt == nil {
                 draft.startedAt = Date()          // początek QSO = chwila wpisania pierwszego znaku
             }
+            // znak się zmienił - dane poprzedniego znaku z QRZ (np. niepełnego „SP5X”) usuń, jeśli nie poprawione ręcznie
+            draft.autoFill.clear([("name", $draft.name), ("qth", $draft.qth), ("grid", $draft.grid)])
             // Dane stacji z QRZ (z opóźnieniem - nie pytamy o każdą wpisaną literę).
             if !cleaned.isEmpty { lookup.request(cleaned, using: qrz, debounce: true) }
         }
         .onChange(of: lookup.record) { record in
             // Uzupełnij tylko puste pola - wpisanego ręcznie nic nie nadpisujemy.
             guard let record, !draft.call.isEmpty, QRZClient.baseCall(draft.call) == record.call else { return }
-            if draft.name.isEmpty { draft.name = record.firstName.isEmpty ? record.displayName : record.firstName }
+            if draft.name.isEmpty {
+                draft.name = record.firstName.isEmpty ? record.displayName : record.firstName
+                draft.autoFill.filled("name", draft.name)
+            }
             // stacja spoza swojego kraju (P4/WE9V): QTH i lokator z QRZ to jej dom, nie miejsce pracy
             guard !OperatingLocation.isAwayFromHome(draft.call) else { return }
-            if draft.qth.isEmpty { draft.qth = record.city }
+            if draft.qth.isEmpty { draft.qth = record.city; draft.autoFill.filled("qth", draft.qth) }
             if draft.grid.isEmpty {
                 draft.grid = record.grid.isEmpty ? (record.coordinate.map { Geo.grid(for: $0) } ?? "") : record.grid
+                draft.autoFill.filled("grid", draft.grid)
             }
         }
         .onChange(of: cat.modeCode) { code in
@@ -203,6 +209,8 @@ struct QuickLogView: View {
 /// i powrót nie kasuje znaku ani pozostałych pól.
 @MainActor
 final class QuickLogDraft: ObservableObject {
+    /// Pola wypełnione z QRZ - czyszczone przy zmianie znaku (jeśli nie poprawione ręcznie).
+    var autoFill = QRZAutoFill()
     @Published var call = ""
     @Published var preset = LogModePreset.all[0]
     @Published var modeTouched = false        // użytkownik sam wybrał tryb - nie nadpisuj trybem radia
