@@ -565,3 +565,16 @@ biblioteki FTDI dla skopu, TQSL dla LoTW, QRZ, WSJT-X; zgłaszanie błędów) or
 (wymagana licencja BSD RNNoise, znaki towarowe). Szablony instrukcji: `Design/dmg/`.
 Skrypt wypisuje sumę SHA-256 obrazu - testerzy mogą sprawdzić, że plik dotarł nieuszkodzony.
 
+
+
+## Wiki GitHub (generowane z pomocy programu)
+
+Strony wiki powstają z `Sources/FT710Control/Help.swift` – wiki zawsze mówi to samo co pomoc w programie.
+Nie edytuj stron w wiki ręcznie: zmiany wprowadzaj w pomocy, potem:
+
+```sh
+python3 tools/make_wiki.py                 # build/wiki/*.md (53 pliki: Home, 25 EN, 25 PL, _Sidebar, _Footer)
+git clone https://github.com/sp5xtf/FT710Control.wiki.git ../FT710Control.wiki   # pierwszy raz
+python3 tools/make_wiki.py ../FT710Control.wiki
+cd ../FT710Control.wiki && git add -A && git commit -m "Wiki: pomoc z wersji X" && git push
+```

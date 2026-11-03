@@ -9,6 +9,7 @@ from an iPhone or iPad browser.
 > [Issues](https://github.com/sp5xtf/FT710Control/issues). The program checks for new versions itself
 > (menu **FT710Control → Check for updates…**).
 
+Documentation: **[Wiki](https://github.com/sp5xtf/FT710Control/wiki)** (the in-app help, English and Polish).
 Polish version below – [wersja polska](#po-polsku).
 
 ## Features
@@ -100,6 +101,6 @@ Interfejs po polsku i angielsku.
 przeciągnij program do Aplikacji. Przy pierwszym uruchomieniu macOS zablokuje program (brak podpisu Apple):
 w macOS 15 – Ustawienia systemowe → Prywatność i ochrona → „Otwórz mimo to”; w macOS 13–14 – prawy przycisk
 → Otwórz → Otwórz; albo w Terminalu `xattr -dr com.apple.quarantine /Applications/FT710Control.app`.
-Pełna pomoc w programie: menu Pomoc (⌘?).
+Pełna pomoc w programie: menu Pomoc (⌘?), a także w [Wiki](https://github.com/sp5xtf/FT710Control/wiki).
 
 Licencja: GNU GPL v3.0.

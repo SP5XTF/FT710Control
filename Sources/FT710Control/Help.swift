@@ -766,7 +766,7 @@ Zakładka **FT8/FT4**: odbiór i nadawanie emisji FT8 (cykl 15 s) i FT4 (cykl 7,
 • Najnowszy wiersz u góry; szara linia z czasem UTC to początek cyklu. Skala 0–3200 Hz.
 • **Lewy przycisk** – częstotliwość odbioru (zielony znacznik), **prawy przycisk** albo **Shift+kliknięcie** – nadawania (czerwony, przerywany; na skali klamra TX jest nad klamrą RX). Znaczniki można **przeciągać**. W panelu NADAWANIE: pole **TX** z krokiem 10 Hz oraz **TX = RX** i **RX = TX**. Zmiana w trakcie nadawania obowiązuje od następnego cyklu.
 • Gdzie nadawać: przy wołaniu CQ wybierz w wodospadzie wolne miejsce (bez sygnałów przez kilka cykli); przy odpowiadaniu na CQ możesz nadawać na częstotliwości stacji (domyślnie – dwuklik przenosi tam TX) albo z boku (**Trzymaj TX**).
-• Suwaki jasności i kontrastu pod wodospadem.
+• Suwaki jasności (☼) i kontrastu (◑) wodospadu – w górnym rzędzie, obok przycisków pasm (razem z **Poziomem TX**).
 
 **Listy**
 • **Aktywność pasma** – wszystkie komunikaty z cyklu (UTC, dB, DT, Hz, komunikat, kraj). **Częstotliwość odbioru** – komunikaty przy zielonym znaczniku i wszystkie skierowane do Ciebie.
@@ -841,7 +841,7 @@ The **FT8/FT4** tab: receiving and transmitting FT8 (15 s cycle) and FT4 (7.5 s 
 • Newest line at the top; the grey line with a UTC time marks the start of a cycle. Scale 0–3200 Hz.
 • **Left button** – receive frequency (green marker), **right button** or **Shift+click** – transmit frequency (red, dashed; on the scale the TX bracket sits above the RX bracket). Markers can be **dragged**. In the TRANSMIT panel: the **TX** field with 10 Hz steps, plus **TX = RX** and **RX = TX**. A change during transmission applies from the next period.
 • Where to transmit: when calling CQ pick a clear spot in the waterfall (no signals for a few periods); when answering a CQ you can transmit on the station's frequency (default – double-click moves TX there) or off to the side (**Hold TX**).
-• Brightness and contrast sliders below the waterfall.
+• The waterfall brightness (☼) and contrast (◑) sliders – in the top row, next to the band buttons (together with **TX level**).
 
 **Lists**
 • **Band activity** – all messages of each cycle (UTC, dB, DT, Hz, message, country). **RX frequency** – messages near the green marker and all messages addressed to you.
