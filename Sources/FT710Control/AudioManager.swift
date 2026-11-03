@@ -286,10 +286,13 @@ final class AudioManager: ObservableObject {
     /// Ponowne uruchomienie torów dźwięku z odświeżoną listą urządzeń (po uśpieniu numery urządzeń mogą się zmienić).
     /// Odsłuch i wodospad FT8 (karmiony tym samym dźwiękiem) wracają same - bez ręcznego wyłączania odsłuchu.
     private var recoveringAudio = false
+    private var lastAudioRecovery = Date.distantPast
 
     func recoverAudio(_ reason: String) {
-        guard !recoveringAudio else { return }
+        // najwyżej raz na 10 s - nawet gdyby powstała pętla, nie zablokuje programu (start silnika trwa chwilę)
+        guard !recoveringAudio, Date().timeIntervalSince(lastAudioRecovery) > 10 else { return }
         recoveringAudio = true
+        lastAudioRecovery = Date()
         Task { @MainActor in
             defer { recoveringAudio = false }
             try? await Task.sleep(nanoseconds: 700_000_000)

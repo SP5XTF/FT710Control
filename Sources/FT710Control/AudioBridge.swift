@@ -33,6 +33,13 @@ final class AudioBridge: @unchecked Sendable {
     /// zatrzymuje się i wymaga ponownego uruchomienia; wywoływane na głównym wątku.
     var onConfigurationChange: (@Sendable () -> Void)?
     private var configObservers: [NSObjectProtocol] = []
+    private var startedAt: CFAbsoluteTime = 0
+
+    /// Oba silniki działają (po zmianie konfiguracji macOS zatrzymuje silnik - wtedy false).
+    var enginesRunning: Bool {
+        lock.lock(); defer { lock.unlock() }
+        return running && captureEngine.isRunning && playEngine.isRunning
+    }
 
     /// Sekundy od ostatniej próbki z wejścia (nieskończoność - tor nie działa).
     var secondsSinceInput: Double {
@@ -66,11 +73,17 @@ final class AudioBridge: @unchecked Sendable {
         player = newPlayer
         pending = 0
         lastInputTime = CFAbsoluteTimeGetCurrent()            // start - strażnik daje czas na pierwsze próbki
+        startedAt = lastInputTime
         lock.unlock()
         for engine in [newCapture, newPlay] {
             configObservers.append(NotificationCenter.default.addObserver(
                 forName: .AVAudioEngineConfigurationChange, object: engine, queue: .main) { [weak self] _ in
-                    self?.onConfigurationChange?()
+                    guard let self else { return }
+                    // Sam start silnika (wskazanie urządzeń) wywołuje to powiadomienie - reakcja na nie dawała pętlę
+                    // ponownych uruchomień co ok. 1 s (szarpanie skopu, opóźnienie 200 ms). Tylko gdy silnik
+                    // naprawdę stanął i nie tuż po starcie.
+                    guard CFAbsoluteTimeGetCurrent() - self.startedAt > 3, !self.enginesRunning else { return }
+                    self.onConfigurationChange?()
                 })
         }
 
