@@ -387,6 +387,11 @@ The **DISPLAY** tab changes how the RF scope looks. Changes appear on the scope 
 • **Odbieraj QSO z WSJT-X / JTDX** – w WSJT-X: Settings → Reporting → UDP Server `127.0.0.1`, port `2237`.
 
 Dane: `~/Library/Application Support/FT710Control/logbook.json` (kopia przy każdym uruchomieniu).
+
+**Ręczne dodanie QSO** (okno dziennika → **Dodaj QSO…**)
+• Np. łączności z drugiego radia na **2 m, 70 cm, 23 cm** (albo HF): znak z QRZ/HamQTH, **data i godzina UTC**, **pasmo** (160 m … 3 cm) z podpowiedzią typowej częstotliwości dla emisji (do zmiany; częstotliwość musi leżeć w paśmie), **emisja** (także MSK144 i Q65), RST, imię, QTH, **lokator** (z nim łączność liczy się do VUCC), uwagi.
+• **Propagacja** (ADIF PROP_MODE): przemiennik, satelita (z nazwą, np. QO-100 – wymagane przez LoTW), tropo, sporadyczne E, meteor scatter, EME, zorza, F2. **Moje radio** i **moc** (MY_RIG, TX_PWR) – zapamiętywane, więc dla drugiego radia wpisujesz je raz.
+• **Zapisz i następne** – zapisuje i czyści znak, a data, pasmo, emisja i radio zostają (wygodne przy dopisywaniu serii łączności). Zapis jak w dzienniku programu: kraj, strefy, odległość, wysyłka do serwisów.
 """,
                   bodyEN: """
 **Logging a QSO** (LOG tab)
@@ -436,6 +441,11 @@ Dane: `~/Library/Application Support/FT710Control/logbook.json` (kopia przy każ
 • **Receive QSOs from WSJT-X / JTDX** – in WSJT-X: Settings → Reporting → UDP Server `127.0.0.1`, port `2237`.
 
 Data: `~/Library/Application Support/FT710Control/logbook.json` (backed up at every start).
+
+**Adding a QSO manually** (log window → **Add QSO…**)
+• E.g. QSOs from a second radio on **2 m, 70 cm, 23 cm** (or HF): call with QRZ/HamQTH, **UTC date and time**, **band** (160 m … 3 cm) with a suggested typical frequency for the mode (editable; the frequency must lie in the band), **mode** (also MSK144 and Q65), RST, name, QTH, **locator** (with it the QSO counts for VUCC), comment.
+• **Propagation** (ADIF PROP_MODE): repeater, satellite (with its name, e.g. QO-100 – required by LoTW), tropo, sporadic E, meteor scatter, EME, aurora, F2. **My radio** and **power** (MY_RIG, TX_PWR) – remembered, so for the second radio you enter them once.
+• **Save and next** – saves and clears the call, while date, band, mode and radio stay (handy for logging a series of QSOs). Saved as in the program's log: entity, zones, distance, upload to services.
 """),
 
         HelpTopic(id: "services", icon: "icloud.and.arrow.up", titlePL: "Usługi online (LoTW, QRZ, eQSL, WRL…)", titleEN: "Online services (LoTW, QRZ, eQSL, WRL…)",

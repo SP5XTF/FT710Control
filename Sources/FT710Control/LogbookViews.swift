@@ -307,6 +307,7 @@ struct LogbookWindowView: View {
     @State private var showDXCC = false
     @State private var showMap = false
     @State private var showStats = false
+    @State private var showManualQSO = false
     @AppStorage("qsl.countEQSL") private var countEQSL = false
     @AppStorage("qsl.countQRZ") private var countQRZ = false
 
@@ -417,6 +418,7 @@ struct LogbookWindowView: View {
         }
         .sheet(isPresented: $showDXCC) { AwardsView(store: store) }
         .sheet(isPresented: $showStats) { StatisticsView(store: store) }
+        .sheet(isPresented: $showManualQSO) { ManualQSOView(store: store) }
         .sheet(isPresented: $showMap) {
             QSOMapView(store: store) { qso in
                 showMap = false
@@ -491,6 +493,9 @@ struct LogbookWindowView: View {
                     .disabled(selection.isEmpty)
                     .fixedSize()
                 Divider().frame(height: 16)
+                Button(L("Dodaj QSO…")) { showManualQSO = true }
+                    .help(L("Ręczne dodanie łączności - np. z drugiego radia (2 m, 70 cm, 23 cm): pasmo, data UTC, emisja, propagacja, radio i moc"))
+                    .fixedSize()
                 Button(L("Statystyki…")) { showStats = true }
                     .help(L("Wykresy: łączności w latach, pasma, emisje, kontynenty, godziny"))
                     .fixedSize()

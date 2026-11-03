@@ -628,6 +628,23 @@ final class CoreLogicTests: XCTestCase {
         XCTAssertEqual(RadioControl.match("NB00")?.0, .noiseBlanker)
     }
 
+    /// Ręczne dodawanie QSO: podpowiadana częstotliwość każdej emisji leży w wybranym paśmie (w tym 2 m, 70 cm, 23 cm).
+    @MainActor
+    func testManualQSODefaultFrequencies() {
+        for band in ManualQSOView.bands {
+            for mode in ManualQSOView.modes.map(\.label) {
+                let text = ManualQSOView.defaultFrequency(band: band, mode: mode)
+                let hz = LogFrequency.parseMHz(text)
+                XCTAssertNotNil(hz, "\(band) \(mode): „\(text)”")
+                XCTAssertEqual(hz.flatMap(LogFrequency.band(for:)), band, "\(band) \(mode): \(text) MHz poza pasmem")
+            }
+        }
+        XCTAssertEqual(ManualQSOView.defaultFrequency(band: "2m", mode: "FM"), "145.500")
+        XCTAssertEqual(ManualQSOView.defaultFrequency(band: "23cm", mode: "SSB"), "1296.200")
+        XCTAssertNil(Bands.name(for: 145_500_000), "tabela FT-710 nie zna 2 m - dlatego okno bierze pasmo z tabeli ADIF")
+        XCTAssertEqual(LogFrequency.band(for: 1_296_200_000), "23cm")
+    }
+
     // MARK: - HamQTH
 
     func testHamQTHParsing() throws {
