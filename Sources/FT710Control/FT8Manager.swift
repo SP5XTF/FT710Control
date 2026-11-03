@@ -128,7 +128,10 @@ final class FT8Manager: ObservableObject {
     }
 
     // MARK: Nadawanie (logika w FT8Transmit.swift)
-    @Published var dxCall = "" { didSet { if dxCall != oldValue { generateMessages() } } }
+    @Published var dxCall = "" { didSet { if dxCall != oldValue { generateMessages(); prefetchQRZ(dxCall) } } }
+    /// Dane z QRZ/HamQTH pobrane w tle zaraz po wyborze stacji (QSO trwa ok. minuty) - zapis QSO od razu z imieniem,
+    /// QTH itd. (wcześniej łączności FT8 trafiały do dziennika bez danych z QRZ).
+    var qrzPrefetch: [String: QRZRecord] = [:]
     @Published var dxGrid = "" { didSet { if dxGrid != oldValue { generateMessages() } } }
     @Published var reportSent = -10 { didSet { if reportSent != oldValue { generateMessages() } } }
     /// Tx1…Tx6 - edytowalne; po każdej zmianie sprawdzane koderem (echo).
@@ -307,7 +310,15 @@ final class FT8Manager: ObservableObject {
 
     private func pushLevels() { receiver.setWaterfallLevels(brightness: brightness, contrast: contrast) }
 
-    func setWaterfallVisible(_ visible: Bool) { receiver.setWaterfallWanted(visible && enabled) }
+    /// Wodospad liczony, gdy ogląda go okno FT8 na Macu albo panel zdalny (niezależnie - wyłączenie w jednym
+    /// miejscu nie wyłącza w drugim).
+    private var macWaterfallVisible = false
+    private var remoteWaterfallWanted = false
+    func setWaterfallVisible(_ visible: Bool) { macWaterfallVisible = visible; applyWaterfallWanted() }
+    func setRemoteWaterfall(_ wanted: Bool) { remoteWaterfallWanted = wanted; applyWaterfallWanted() }
+    private func applyWaterfallWanted() {
+        receiver.setWaterfallWanted((macWaterfallVisible || remoteWaterfallWanted) && enabled)
+    }
 
     func clearActivity() {
         activity = []

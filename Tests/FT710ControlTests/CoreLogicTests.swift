@@ -617,6 +617,17 @@ final class CoreLogicTests: XCTestCase {
         XCTAssertEqual(UpdateChecker.clean("v0.9.0-beta"), "0.9.0-beta")
     }
 
+    /// NAR (wąski filtr): komenda NA0 i rozpoznanie odpowiedzi obok podobnych prefiksów (NB0, NL0, NR0).
+    func testNarrowControl() {
+        XCTAssertEqual(RadioControl.narrow.setCommand(1), "NA01;")
+        XCTAssertEqual(RadioControl.narrow.setCommand(0), "NA00;")
+        XCTAssertEqual(RadioControl.narrow.query, "NA0;")
+        XCTAssertEqual(RadioControl.match("NA01")?.0, .narrow)
+        XCTAssertEqual(RadioControl.match("NA01")?.1, 1)
+        XCTAssertEqual(RadioControl.match("NR01")?.0, .noiseReduction, "DNR bez zmian")
+        XCTAssertEqual(RadioControl.match("NB00")?.0, .noiseBlanker)
+    }
+
     // MARK: - HamQTH
 
     func testHamQTHParsing() throws {

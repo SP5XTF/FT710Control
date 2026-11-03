@@ -454,6 +454,7 @@ struct ContentView: View {
             }
 
             HStack(spacing: 4) {
+                toggleButton("NAR", .narrow)
                 toggleButton("NOTCH", .notch)
                 toggleButton("DNF", .notchAuto)
                 toggleButton("CONTOUR", .contour)
@@ -654,15 +655,18 @@ struct ContentView: View {
                 Text(cat.transmitting ? "TX" : "RX")
                     .font(.system(size: 26, weight: .heavy))
                     .foregroundStyle(cat.transmitting ? Theme.tx : Theme.ok)
+                let limit = Int(cat.txTimeout)
                 if let start = txStartedAt, cat.transmitting {
+                    // czas nadawania / limit TX; ostatnie 30 s - pomarańczowo (zbliża się automatyczne wyłączenie)
                     let seconds = Int(context.date.timeIntervalSince(start))
-                    Text(String(format: "%d:%02d", seconds / 60, seconds % 60))
+                    Text(String(format: "%d:%02d / %d:%02d", seconds / 60, seconds % 60, limit / 60, limit % 60))
                         .font(.system(size: 13, design: .monospaced))
-                        .foregroundStyle(Theme.text)
+                        .foregroundStyle(limit - seconds <= 30 ? Color.orange : Theme.text)
                 } else {
-                    Text(L("limit {1} min", Int(cat.txTimeout / 60)))
+                    Text(L("limit TX: {1} min", limit / 60))
                         .font(.system(size: 11))
                         .foregroundStyle(Theme.dim)
+                        .help(L("Maksymalny czas jednego nadawania - potem program sam wyłącza TX (ustawienie: „Odblokuj TX”)"))
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -750,18 +754,20 @@ struct ContentView: View {
 
     /// Suwak poziomu z wyłączaniem jak na panelu radia: 0 = funkcja wyłączona (np. DNR OFF),
     /// powyżej zera = włączona z tym poziomem.
+    /// DNR i NB jak w radiu: przycisk włącza i wyłącza, suwak (odpowiednik pokrętła) zmienia zapamiętany poziom -
+    /// także przy wyłączonej funkcji; ruszenie suwaka nie włącza funkcji, a ponowne włączenie wraca do poziomu.
     private func levelSlider(_ title: String, onOff: RadioControl, level: RadioControl, maximum: Int) -> some View {
         let isOn = (cat.value(onOff) ?? 0) != 0
-        let current = isOn ? max(1, cat.value(level) ?? 1) : 0
         let available = cat.isAvailable(onOff) && cat.isAvailable(level)
-        return RigSlider(title: title, value: cat.value(onOff) == nil ? nil : current, range: 0...maximum,
-                         display: { $0 == 0 ? "OFF" : "\($0)" }) { newValue in
-            if newValue <= 0 {
-                if (cat.value(onOff) ?? 0) != 0 { cat.set(onOff, 0) }
-            } else {
-                if (cat.value(onOff) ?? 0) == 0 { cat.set(onOff, 1) }
+        return HStack(alignment: .bottom, spacing: 8) {
+            Button(title) { cat.set(onOff, isOn ? 0 : 1) }
+                .buttonStyle(RigButtonStyle(selected: isOn, height: 24, fontSize: 11))
+                .frame(width: 54)
+                .help(L("{1}: włącz / wyłącz (poziom zostaje zapamiętany w radiu)", title))
+            RigSlider(title: isOn ? L("poziom") : L("poziom (wyłączone)"), value: cat.value(level), range: 1...maximum) { newValue in
                 cat.set(level, newValue)
             }
+            .opacity(isOn ? 1 : 0.55)
         }
         .disabled(!available)
         .opacity(available ? 1 : 0.4)

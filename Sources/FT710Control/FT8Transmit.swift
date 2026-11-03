@@ -139,6 +139,18 @@ extension FT8Manager {
         respond(to: decode)
     }
 
+    /// Pobranie danych stacji z QRZ/HamQTH w tle (wybór stacji do QSO) - gotowe przy zapisie łączności.
+    func prefetchQRZ(_ rawCall: String) {
+        let call = rawCall.uppercased()
+        let base = QRZClient.baseCall(call)
+        guard base.count >= 3, FTMessageInfo.isCallsign(call), qrzPrefetch[base] == nil,
+              AppServices.shared.qrz.canLookup else { return }
+        if qrzPrefetch.count > 300 { qrzPrefetch.removeAll() }
+        Task { @MainActor [weak self] in
+            if case .found(let record) = await AppServices.shared.qrz.lookup(call) { self?.qrzPrefetch[base] = record }
+        }
+    }
+
     /// Hound (DXpedycja, zasady WSJT-X): raport od Foxa → Tx3 „R+raport” na częstotliwości Foxa (powtórzenia
     /// o 300 Hz wyżej); RR73 od Foxa → zapis QSO i koniec nadawania (Hound nie wysyła 73). Fox nadaje
     /// zwykłe komunikaty albo połączone „K1ABC RR73; MYCALL <FOX> -12”.
@@ -498,11 +510,24 @@ extension FT8Manager {
             qso.extra["ITUZ"] = String(match.ituZone)
             qso.extra["CONT"] = match.continent
         }
+        // dane z QRZ/HamQTH pobrane w trakcie QSO - tylko puste pola (lokator z komunikatu FT8 zostaje);
+        // stacja spoza swojego kraju - tylko imię, jak przy ręcznym „Uzupełnij z QRZ”
+        let base = QRZClient.baseCall(call)
+        let record = qrzPrefetch[base]
+        if let record {
+            let away = OperatingLocation.isAwayFromHome(call) ? OperatingLocation.ctyFields(call) : nil
+            if let filled = qso.filled(from: record, fallbackMyGrid: logbook.myGrid, awayFields: away) { qso = filled }
+        }
         if let home = Geo.coordinate(fromGrid: qso.myGrid), let remote = Geo.coordinate(fromGrid: qso.grid) {
             qso.extra["DISTANCE"] = String(Int(Geo.distanceKm(home, remote).rounded()))
         }
         logbook.add(qso)
-        loggedCall = QRZClient.baseCall(call)
+        loggedCall = base
+        if record == nil, AppServices.shared.qrz.canLookup {
+            // dane nie zdążyły przyjść - uzupełnienie zaraz po zapisie (ten sam mechanizm co „Uzupełnij z QRZ”)
+            let id = qso.id
+            Task { @MainActor in _ = await logbook.fillFromQRZ(ids: [id], qrz: AppServices.shared.qrz) }
+        }
         txStatus = L("Zapisano QSO: {1} ({2} / {3}).", call, qso.rstSent, qso.rstRcvd.isEmpty ? "—" : qso.rstRcvd)
         txStatusIsInfo = true
     }

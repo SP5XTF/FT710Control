@@ -75,8 +75,9 @@ details p { margin: 6px 0 0; }
 #pBands { grid-area: bands; } #pRadio { grid-area: radio; } #pAudio { grid-area: audio; }
 #pLog { grid-area: log; } #pCW { grid-area: cw; } #pCluster { grid-area: cluster; } #pAlerts { grid-area: alerts; }
 #pFT8 { grid-area: ft8; }
-.ft8row { display: grid; grid-template-columns: 54px 30px 40px 1fr; gap: 6px; padding: 4px; border-bottom: 1px solid var(--line); cursor: pointer; font-family: ui-monospace, Menlo, monospace; font-size: 13px; }
+.ft8row { display: grid; grid-template-columns: 70px 34px 44px minmax(0, 1fr); gap: 8px; white-space: nowrap; padding: 4px; border-bottom: 1px solid var(--line); cursor: pointer; font-family: ui-monospace, Menlo, monospace; font-size: 13px; }
 .ft8row:hover { background: #21262d; }
+.ft8row > span:last-child { overflow: hidden; text-overflow: ellipsis; }
 .ft8row.me { background: rgba(255, 77, 77, 0.18); }
 .sec { border-top: 1px solid var(--line); margin-top: 8px; padding-top: 6px; }
 .sec summary { cursor: pointer; font-size: 11px; letter-spacing: 1px; color: var(--amber); font-weight: 700; }
@@ -94,6 +95,45 @@ details p { margin: 6px 0 0; }
     grid-template-areas: "freq scope" "meters scope" "bands ft8" "radio ft8" "radio log" "cw cluster" "audio alerts"; }
   #trace { height: 130px; }
   #wf { height: 340px; }
+}
+/* Układ komputerowy (od 1200 px) - jak program na Macu: pasma | VFO, wskaźniki, skop | radio; zakładki na dole */
+.deskOnly { display: none !important; }
+.gauge { height: 92px; background: #0b0f14; border-radius: 6px; image-rendering: auto; }
+#rxTile { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 92px;
+  background: #0b0f14; border-radius: 6px; font: 700 30px -apple-system, sans-serif; color: var(--green); }
+#rxTile.tx { color: var(--red); }
+@media (min-width: 1200px) {
+  /* Wysoka kolumna radia obejmuje kilka wierszy - nadmiar wysokości przejmuje wiersz elastyczny (1fr) pod
+     zakładkami, więc VFO, wskaźniki, skop i zakładki przylegają do siebie bez pustych przerw. */
+  #grid { grid-template-columns: 210px minmax(0, 1fr) 380px 320px; align-items: start;
+    grid-template-rows: auto auto auto 1fr auto;
+    grid-template-areas: "bands freq meters radio" "bands scope scope radio" "tabbar tabbar tabbar radio"
+                         "tabs tabs tabs radio" "tabs tabs tabs audio"; }
+  /* suwaki: etykieta | suwak | wartość w jednej linii (jak na Macu) - kolumna radia o połowę krótsza */
+  /* wszystko w granicach kolumny: suwak może się zwężać (min-width 0), wartość ma stałe miejsce */
+  .ctl { grid-template-columns: 70px minmax(0, 1fr); margin: 3px 0; }
+  .ctl > * { min-width: 0; }
+  .ctl .row { flex-wrap: nowrap; min-width: 0; }
+  .ctl .row input[type=range] { flex: 1 1 auto; min-width: 0; width: 100%; }
+  .ctl .row span { width: 58px !important; flex: none; font-size: 12px; text-align: right; overflow: hidden; white-space: nowrap; }
+  /* przyciski wyboru (ATT, IPO, AGC) - mieszczą się w kolumnie, w razie potrzeby zawijają */
+  #pRadio .seg { flex-wrap: wrap; max-width: 100%; }
+  #pRadio .seg button { padding: 6px 9px; font-size: 13px; }
+  #pRadio, #pAudio { overflow: hidden; }
+  .ctl b { font-size: 12px; line-height: 1.15; }
+  #pRadio .sec { margin-top: 6px; padding-top: 4px; }
+  #pLog, #pFT8, #pCluster, #pCW, #pAlerts { grid-area: tabs; }
+  #tabBar { grid-area: tabbar; display: flex !important; gap: 4px; flex-wrap: wrap; }
+  #tabBar button { font-size: 12px; font-weight: 600; letter-spacing: .5px; padding: 6px 12px; }
+  #gauges { display: grid !important; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .phoneOnly { display: none !important; }
+  .tabOff { display: none !important; }
+  #pCW.hidden.tabOn { display: block !important; }
+  #freq { font-size: 46px; }
+  #trace { height: 150px; }
+  #wf { height: 360px; }
+  .list { max-height: 320px; }
+  #pFT8 .list { max-height: 300px !important; }
 }
 </style>
 </head>
@@ -118,6 +158,10 @@ details p { margin: 6px 0 0; }
   </div>
 
   <div id="grid">
+    <div id="tabBar" class="deskOnly">
+      <button data-tab="pLog" data-t="DZIENNIK">DZIENNIK</button><button data-tab="pCluster">DX CLUSTER</button>
+      <button data-tab="pFT8">FT8/FT4</button><button data-tab="pCW">CW</button><button data-tab="pAlerts" data-t="ALERTY">ALERTY</button>
+    </div>
     <div id="pFreq" class="panel">
       <div id="freq">–</div>
       <div id="modeTx"><span id="mode" class="badge">–</span><span id="txBadge" class="badge tx hidden">TX</span><span id="splitBadge" class="badge hidden">SPLIT</span></div>
@@ -133,6 +177,10 @@ details p { margin: 6px 0 0; }
     </div>
 
     <div id="pScope" class="panel">
+      <div class="row" style="margin-bottom:4px">
+        <button id="smRF" class="tog on">RF</button><button id="smFT8" class="tog">FT8</button>
+        <button id="smTX" class="tog" style="display:none" data-t="Dotknięcie: TX">Dotknięcie: TX</button>
+      </div>
       <div id="traceWrap"><canvas id="trace" width="850" height="90"></canvas><div id="spots"></div></div>
       <canvas id="wf" width="850" height="170"></canvas>
       <div id="axis"><span id="ax0"></span><span id="ax1"></span><span id="ax2"></span><span id="ax3"></span><span id="ax4"></span></div>
@@ -140,11 +188,17 @@ details p { margin: 6px 0 0; }
     </div>
 
     <div id="pMeters" class="panel">
+      <div id="gauges" class="deskOnly">
+        <canvas id="gS" class="gauge"></canvas><canvas id="gPO" class="gauge"></canvas><canvas id="gSWR" class="gauge"></canvas>
+        <canvas id="gCOMP" class="gauge"></canvas><canvas id="gALC" class="gauge"></canvas><div id="rxTile">RX</div>
+      </div>
+      <div class="phoneOnly">
       <div class="meter"><b>S</b><div class="bar"><div id="sBar"></div></div><span id="sTxt">–</span></div>
       <div class="meter"><b>PO</b><div class="bar"><div id="poBar"></div></div><span id="poTxt">–</span></div>
       <div class="meter"><b>COMP</b><div class="bar"><div id="compBar"></div></div><span id="compTxt">–</span></div>
       <div class="meter"><b>ALC</b><div class="bar"><div id="alcBar"></div></div><span id="alcTxt">–</span></div>
       <div class="meter"><b>SWR</b><div class="bar"><div id="swrBar"></div></div><span id="swrTxt">–</span></div>
+      </div>
     </div>
 
     <div id="pBands" class="panel">
@@ -297,10 +351,12 @@ const EN = {
   "OSTATNIE QSO": "RECENT QSOS", "Tekst do nadania": "Text to send", "Nadaj": "Send", "ALERTY": "ALERTS",
   "Zapisano": "Logged", "było": "worked", "nowa stacja": "new station", "brak połączenia": "not connected",
   "Brak spotów.": "No spots.", "Brak alertów.": "No alerts.", "Brak łączności.": "No QSOs.",
+  "Dotknięcie: TX": "Tap: TX",
+  "Wodospad FT8 · dotknij: RX (przełącznik „Dotknięcie: TX” - TX)": "FT8 waterfall · tap: RX (“Tap: TX” switch – TX)",
   "Dekodowanie": "Decoding", "Włącz TX": "Enable TX", "Wyłącz TX": "Disable TX", "NADAJE": "TRANSMITTING", "TX włączony": "TX enabled",
   "Brak komunikatów.": "No messages.", "Następny": "Next", "QSO z": "QSO with",
   "Dotknięcie komunikatu - wołanie stacji i włączenie TX (jak dwuklik na Macu). Nadawanie - te same warunki co PTT; po rozłączeniu przeglądarki TX FT8 się wyłącza.": "Tap a message – call the station and enable TX (like a double-click on the Mac). Transmitting – the same conditions as PTT; when the browser disconnects, FT8 TX is turned off.",
-  "AF": "AF", "RF": "RF", "SQL": "SQL", "Poziom NB": "NB level", "Poziom NR": "NR level", "Szerokość": "Width",
+  "AF": "AF", "RF": "RF", "SQL": "SQL", "Poziom NB": "NB level", "Poziom DNR": "DNR level", "Szerokość": "Width",
   "Przesunięcie": "Shift", "Notch": "Notch", "Contour": "Contour", "MIC": "MIC", "Poziom PROC": "PROC level", "AMC": "AMC"
 };
 let LANG = localStorage.getItem("ft710.lang") || ((navigator.language || "").startsWith("pl") ? "pl" : "en");
@@ -438,12 +494,12 @@ const pct = (v) => v + "";
 addSlider($("secRX"), "af", "AF", 0, 255, pct);
 addSlider($("secRX"), "rf", "RF", 0, 255, pct);
 addSlider($("secRX"), "sql", "SQL", 0, 100, pct);
-addToggles($("secRX"), [["nb", "NB"], ["nr", "NR"], ["dnf", "DNF"]]);
+addToggles($("secRX"), [["nb", "NB"], ["nr", "DNR"], ["dnf", "DNF"]]);
 addSlider($("secRX"), "nbl", "Poziom NB", 0, 10, pct);
-addSlider($("secRX"), "nrl", "Poziom NR", 1, 15, pct);
+addSlider($("secRX"), "nrl", "Poziom DNR", 1, 15, pct);
 addSlider($("secFilter"), "width", "Szerokość", 0, 23, (v) => "#" + v);
 addSlider($("secFilter"), "shift", "Przesunięcie", -1200, 1200, (v) => v + " Hz");
-addToggles($("secFilter"), [["notch", "NOTCH"], ["cont", "CONTOUR"]]);
+addToggles($("secFilter"), [["nar", "NAR"], ["notch", "NOTCH"], ["cont", "CONTOUR"]]);
 addSlider($("secFilter"), "notchf", "Notch", 1, 320, (v) => v * 10 + " Hz");
 addSlider($("secFilter"), "contf", "Contour", 10, 3200, (v) => v + " Hz");
 addSlider($("secTX"), "mic", "MIC", 0, 100, pct);
@@ -531,9 +587,11 @@ function showFT8State(m) {
   parts.push("TX " + m.txf + " Hz · RX " + m.rxf + " Hz");
   if (m.st) parts.push(m.st);
   $("ft8Next").textContent = parts.join(" · ");
+  if (scopeMode === "ft8") drawFT8Markers();
   const box = $("ft8Bands"); box.innerHTML = "";
   (m.bands || []).forEach((hz) => {
-    const b = makeButton(bandName(hz) + " m", () => ft8("band", { hz }), box);
+    // pasmo FT8 - skop przełącza się na wodospad FT8 (jak zakładka FT8 na Macu)
+    const b = makeButton(bandName(hz) + " m", () => { ft8("band", { hz }); setScopeMode("ft8"); }, box);
     b.classList.add("tog");
     if (bandName(hz) === bandName(m.dial || 0)) b.classList.add("on");
   });
@@ -689,10 +747,13 @@ function onJSON(m) {
     case "auth_ok":
       if (m.lang && !localStorage.getItem("ft710.lang")) { LANG = m.lang; applyLang(); }
       RANGES = m.ranges || {};
+      GAUGES = m.gauges || {};
       MYCALL = m.mycall || "";
       applyRanges();
       $("loginMsg").textContent = "";
       $("login").classList.add("hidden");
+      if (scopeMode === "ft8") send({ t: "scopemode", m: "ft8" });   // po ponownym połączeniu - znów wodospad FT8
+      applyDesk();
       $("app").classList.remove("hidden");
       $("dot").classList.add("ok");
       $("conn").textContent = T("Połączono") + (m.station ? " · " + m.station : "");
@@ -800,6 +861,7 @@ function render() {
   // SWR jak w aplikacji na stacji: od ok. 2:1 pomarańczowy, od ok. 4:1 czerwony.
   const swrRaw = st.tx ? st.swr : 0;
   $("swrBar").style.background = swrRaw >= 126 ? "var(--red)" : swrRaw >= 52 ? "var(--amber)" : "var(--acc)";
+  drawGauges();
 
   const canTX = st.allowTX && st.audioTX && st.txHere && micReady && st.conn;
   $("ptt").disabled = !canTX;
@@ -828,7 +890,10 @@ function onBinary(buf) {
     rxPush(f);
   } else if (type === 1) {
     rxPackets++;
-  } else if (type === 2) {
+  } else if (type === 3 && scopeMode === "ft8") {
+    const dv = new DataView(buf);
+    drawFT8Row(dv.getUint32(4, true), new Uint8Array(buf, 8));
+  } else if (type === 2 && scopeMode === "rf") {
     const dv = new DataView(buf);
     scope.lo = dv.getUint32(4, true);
     scope.hi = dv.getUint32(8, true);
@@ -917,7 +982,139 @@ function drawScope(a) {
   drawSpots();
 }
 
+// ---------- układ komputerowy: zakładki, rozwinięte sekcje, wskaźniki łukowe ----------
+let GAUGES = {};
+const DESK = window.matchMedia ? window.matchMedia("(min-width: 1200px)") : null;
+const isDesk = () => !!(DESK && DESK.matches);
+const TABS = ["pLog", "pCluster", "pFT8", "pCW", "pAlerts"];
+function selectTab(id) {
+  if (!TABS.includes(id)) id = "pLog";
+  try { localStorage.setItem("ft710.tab", id); } catch (e) {}
+  TABS.forEach((t) => { $(t).classList.toggle("tabOff", t !== id); $(t).classList.toggle("tabOn", t === id); });
+  document.querySelectorAll("#tabBar button").forEach((b) => b.classList.toggle("on", b.dataset.tab === id));
+}
+document.querySelectorAll("#tabBar button").forEach((b) => b.addEventListener("click", () => selectTab(b.dataset.tab)));
+selectTab((() => { try { return localStorage.getItem("ft710.tab"); } catch (e) { return null; } })() || "pLog");
+function applyDesk() {
+  if (isDesk()) document.querySelectorAll("#pRadio details.sec").forEach((d) => { d.open = true; });
+  drawGauges();
+}
+if (DESK && DESK.addEventListener) DESK.addEventListener("change", applyDesk);
+
+/// Wskaźnik łukowy jak na Macu: łuk 205°…335°, podziałka z kalibracji stacji, czerwony zakres (SWR od 3, ALC od 70%).
+function drawGauge(id, title, raw, text, active, ticks, redFrom) {
+  const c = $(id);
+  if (!c) return;
+  const dpr = window.devicePixelRatio || 1;
+  const W = c.clientWidth || 130, H = c.clientHeight || 92;
+  if (c.width !== Math.round(W * dpr)) { c.width = Math.round(W * dpr); c.height = Math.round(H * dpr); }
+  const g = c.getContext("2d");
+  if (g.setTransform) g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  g.clearRect(0, 0, W, H);
+  const cx = W / 2, cy = H * 0.86, r = Math.min(W * 0.40, H * 0.66);
+  const ang = (f) => ((205 + 130 * f) * Math.PI) / 180;
+  const pt = (f, rr) => [cx + rr * Math.cos(ang(f)), cy + rr * Math.sin(ang(f))];
+  const arc = (f0, f1, color, w) => { g.beginPath(); g.arc(cx, cy, r, ang(f0), ang(f1)); g.strokeStyle = color; g.lineWidth = w; g.lineCap = "round"; g.stroke(); };
+  arc(0, 1, "rgba(255,255,255,0.12)", 3);
+  if (redFrom != null) arc(redFrom, 1, "rgba(218,54,51,0.75)", 3);
+  const f = Math.max(0, Math.min(1, raw / 255));
+  if (active && f > 0.001) {
+    arc(0, f, redFrom != null && f >= redFrom ? "#da3633" : "#2f81f7", 4);
+    const a = pt(f, r * 0.55), b = pt(f, r * 1.08);
+    g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.strokeStyle = "rgba(255,255,255,0.85)"; g.lineWidth = 1.5; g.stroke();
+  }
+  g.font = "8px -apple-system, sans-serif"; g.fillStyle = "#8b949e"; g.textAlign = "center"; g.textBaseline = "middle";
+  (ticks || []).forEach((t) => {
+    const a = pt(t[0], r - 4), b = pt(t[0], r + 3), l = pt(t[0], r + 11);
+    g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.strokeStyle = "rgba(255,255,255,0.35)"; g.lineWidth = 1; g.stroke();
+    g.fillText(t[1], l[0], l[1]);
+  });
+  g.textAlign = "left"; g.textBaseline = "top"; g.font = "bold 12px -apple-system, sans-serif"; g.fillStyle = "#d29922";
+  g.fillText(title, 6, 5);
+  g.textAlign = "center"; g.textBaseline = "bottom"; g.font = "14px ui-monospace, Menlo, monospace";
+  g.fillStyle = active ? "#e6edf3" : "#8b949e";
+  g.fillText(active ? (text || "–") : "–", W / 2, H - 3);
+}
+function drawGauges() {
+  if (!isDesk() || !st) return;
+  const tx = !!st.tx;
+  drawGauge("gS", "S", st.s || 0, st.sTxt, !tx, GAUGES.s);
+  drawGauge("gPO", "PO", st.po || 0, st.poTxt, tx, GAUGES.po);
+  drawGauge("gSWR", "SWR", st.swr || 0, st.swrTxt, tx, GAUGES.swr, GAUGES.swrRed);
+  drawGauge("gCOMP", "COMP", st.comp || 0, st.compTxt, tx, GAUGES.pct);
+  drawGauge("gALC", "ALC", st.alc || 0, st.alcTxt, tx, GAUGES.pct, 0.7);
+  const tile = $("rxTile");
+  tile.textContent = tx ? "TX" : "RX";
+  tile.classList.toggle("tx", tx);
+}
+
+// ---------- skop: RF albo wodospad FT8 ----------
+let scopeMode = "rf", ft8Pick = "rx", ft8MaxHz = 3000;
+function setScopeMode(m) {
+  if (scopeMode === m) return;
+  scopeMode = m;
+  send({ t: "scopemode", m });
+  $("smRF").classList.toggle("on", m === "rf");
+  $("smFT8").classList.toggle("on", m === "ft8");
+  $("smTX").style.display = m === "ft8" ? "" : "none";
+  $("spots").style.display = m === "ft8" ? "none" : "";
+  scope.width = 0;
+  for (const id of ["trace", "wf"]) { const c = $(id); c.getContext("2d").clearRect(0, 0, c.width, c.height); }
+  if (m === "ft8") { drawFT8Markers(); selectTab("pFT8"); }
+  $("scopeInfo").textContent = m === "ft8" ? T("Wodospad FT8 · dotknij: RX (przełącznik „Dotknięcie: TX” - TX)")
+                                           : T("Skop RF: brak danych (włącz go na stacji)");
+}
+$("smRF").addEventListener("click", () => setScopeMode("rf"));
+$("smFT8").addEventListener("click", () => setScopeMode("ft8"));
+$("smTX").addEventListener("click", () => {
+  ft8Pick = ft8Pick === "tx" ? "rx" : "tx";
+  $("smTX").classList.toggle("on", ft8Pick === "tx");
+});
+function drawFT8Row(maxHz, rgb) {
+  ft8MaxHz = maxHz || 3000;
+  const n = Math.floor(rgb.length / 3);
+  if (!n) return;
+  const wf = $("wf");
+  if (wf.width !== n) { wf.width = n; $("trace").width = n; }
+  const wc = wf.getContext("2d");
+  const wh = wf.height;
+  wc.drawImage(wf, 0, 0, n, wh - 1, 0, 1, n, wh - 1);
+  const row = wc.createImageData(n, 1);
+  for (let i = 0; i < n; i++) {
+    row.data[i * 4] = rgb[i * 3]; row.data[i * 4 + 1] = rgb[i * 3 + 1]; row.data[i * 4 + 2] = rgb[i * 3 + 2]; row.data[i * 4 + 3] = 255;
+  }
+  wc.putImageData(row, 0, 0);
+  drawFT8Markers();
+}
+function drawFT8Markers() {
+  const tr = $("trace");
+  const tc = tr.getContext("2d");
+  const w = tr.width, h = tr.height;
+  tc.clearRect(0, 0, w, h);
+  tc.fillStyle = "rgba(255,255,255,0.25)";
+  for (let f = 500; f < ft8MaxHz; f += 500) tc.fillRect((f / ft8MaxHz) * w, h - 8, 1, 8);
+  tc.font = "bold 11px -apple-system, sans-serif";
+  const mark = (hz, color, label, y) => {
+    if (!hz) return;
+    const x = (hz / ft8MaxHz) * w;
+    tc.fillStyle = color;
+    tc.fillRect(x - 1, 0, 2, h);
+    tc.fillText(label + " " + hz, Math.min(x + 4, w - 70), y);
+  };
+  mark(ft8s.rxf, "#3fb950", "RX", 14);
+  mark(ft8s.txf, "#ff5555", "TX", 30);
+  for (let i = 0; i <= 4; i++) $("ax" + i).textContent = Math.round((ft8MaxHz * i) / 4) + " Hz";
+}
+
 function tuneFromScope(e) {
+  if (scopeMode === "ft8") {
+    // wodospad FT8: RX (jak kliknięcie na Macu) albo TX (przełącznik - jak Shift+kliknięcie)
+    const rect = e.currentTarget.getBoundingClientRect();
+    const t = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    const hz = Math.round((t * ft8MaxHz) / 10) * 10;
+    ft8(ft8Pick === "tx" ? "txf" : "rxf", { hz });
+    return;
+  }
   if (!(scope.hi > scope.lo)) return;
   const rect = e.currentTarget.getBoundingClientRect();
   const t = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));

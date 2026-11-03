@@ -2,6 +2,7 @@ import SwiftUI
 import AppKit
 import Darwin
 import AVFoundation
+import Combine
 
 /// Praca zdalna przez przeglądarkę. Stacja (ten Mac) pozostaje jedynym właścicielem radia:
 /// przeglądarka tylko prosi o zmiany, a stacja je sprawdza i wykonuje.
@@ -63,6 +64,10 @@ final class RemoteStation: ObservableObject {
     private var lastFT8StateSignature = 0
     /// Nadawanie FT8 włączone z przeglądarki - wyłączane po rozłączeniu operatora.
     private var remoteFT8TX = false
+    /// Skop w przeglądarce: „rf” - skop radia, „ft8” - wodospad audio FT8 (jak zakładka FT8 na Macu).
+    private var scopeMode = "rf"
+    private var ft8WaterfallSubscription: AnyCancellable?
+    private var lastFT8WaterfallSent = Date.distantPast
     private var lookupRecord: QRZRecord?
     private var lastClusterSignature = 0
     private var lastAlertsSignature = 0
@@ -295,7 +300,7 @@ final class RemoteStation: ObservableObject {
     static let remoteControls: [String: RadioControl] = [
         "att": .attenuator, "ipo": .preamp, "agc": .agc, "pwr": .power, "ks": .keySpeed,
         "af": .afGain, "rf": .rfGain, "sql": .squelch,
-        "nb": .noiseBlanker, "nbl": .nbLevel, "nr": .noiseReduction, "nrl": .nrLevel, "dnf": .notchAuto,
+        "nb": .noiseBlanker, "nbl": .nbLevel, "nr": .noiseReduction, "nrl": .nrLevel, "dnf": .notchAuto, "nar": .narrow,
         "width": .width, "shift": .ifShift, "notch": .notch, "notchf": .notchFreq, "cont": .contour, "contf": .contourFreq,
         "mic": .micGain, "proc": .processor, "procl": .procLevel, "amc": .amc, "tuner": .tuner, "split": .split
     ]
@@ -303,6 +308,36 @@ final class RemoteStation: ObservableObject {
     /// Podpięcie dziennika, QRZ i CW (wpis do dziennika, wyszukiwanie, nadawanie CW z przeglądarki).
     func attachFT8(_ ft8: FT8Manager) {
         self.ft8 = ft8
+        ft8WaterfallSubscription = ft8.waterfall.$frame.sink { [weak self] frame in
+            guard let frame else { return }
+            self?.forwardFT8Waterfall(frame)
+        }
+    }
+
+    /// Najnowsza linia wodospadu FT8 (kolory jak na Macu), do ok. 600 punktów, najwyżej 10 razy/s.
+    /// Pakiet: [3,0,0,0] + maxHz (UInt32 LE) + RGB.
+    private func forwardFT8Waterfall(_ frame: FTWaterfallFrame) {
+        guard scopeMode == "ft8", let client = operatorClient,
+              Date().timeIntervalSince(lastFT8WaterfallSent) >= 0.1 else { return }
+        let image = frame.image
+        let width = min(image.width, 600)
+        guard width > 0, image.height > 0,
+              let context = CGContext(data: nil, width: width, height: 1, bitsPerComponent: 8, bytesPerRow: width * 4,
+                                      space: CGColorSpaceCreateDeviceRGB(),
+                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return }
+        lastFT8WaterfallSent = Date()
+        context.interpolationQuality = .medium
+        // górny (najnowszy) wiersz obrazu trafia w jedyny wiersz kontekstu
+        context.draw(image, in: CGRect(x: 0, y: -CGFloat(image.height - 1), width: CGFloat(width), height: CGFloat(image.height)))
+        guard let data = context.data else { return }
+        let pixels = data.bindMemory(to: UInt8.self, capacity: width * 4)
+        var packet = Data([3, 0, 0, 0])
+        withUnsafeBytes(of: UInt32(clamping: Int(frame.maxHz)).littleEndian) { packet.append(contentsOf: $0) }
+        packet.reserveCapacity(8 + width * 3)
+        for x in 0..<width {
+            packet.append(pixels[x * 4]); packet.append(pixels[x * 4 + 1]); packet.append(pixels[x * 4 + 2])
+        }
+        client.send(binary: packet, droppable: true)
     }
 
     func attachOperating(logbook: LogbookStore, qrz: QRZClient, cw: CWManager) {
@@ -362,8 +397,14 @@ final class RemoteStation: ObservableObject {
             if let hz = (message["hz"] as? NSNumber)?.intValue, hz > 0 { ft8.tune(to: hz) }
         case "decode":
             ft8.enabled = (message["on"] as? Bool) ?? true
+            ft8.setRemoteWaterfall(scopeMode == "ft8")         // wodospad liczony tylko przy włączonym dekodowaniu
         case "hound":
             ft8.houndMode = (message["on"] as? Bool) ?? false
+        case "rxf", "txf":
+            // dotknięcie wodospadu FT8: RX (jak kliknięcie na Macu) albo TX (jak Shift+kliknięcie)
+            guard let hz = (message["hz"] as? NSNumber)?.intValue else { return }
+            let value = min(max(hz, 100), 3000)
+            if op == "rxf" { ft8.rxFreq = value } else { ft8.txFreq = value }
         default:
             break
         }
@@ -542,7 +583,7 @@ final class RemoteStation: ObservableObject {
     }
 
     private func forwardScope(_ frame: FT4222ScopeReader.Frame) {
-        guard let client = operatorClient, Date().timeIntervalSince(lastScopeSent) >= 1.0 / 15 else { return }
+        guard scopeMode == "rf", let client = operatorClient, Date().timeIntervalSince(lastScopeSent) >= 1.0 / 15 else { return }
         lastScopeSent = Date()
         scopeRange = (frame.lowHz, frame.highHz)
         var packet = Data([2, 0, 0, 0])
@@ -613,6 +654,9 @@ final class RemoteStation: ObservableObject {
             remoteKeying = false
         case "ft8":
             handleFT8(message)
+        case "scopemode":
+            scopeMode = (message["m"] as? String) == "ft8" ? "ft8" : "rf"
+            ft8?.setRemoteWaterfall(scopeMode == "ft8")
         case "lookup":
             guard let raw = message["call"] as? String else { return }
             lookup(raw.uppercased().trimmingCharacters(in: .whitespaces))
@@ -674,8 +718,14 @@ final class RemoteStation: ObservableObject {
         if allowTX { startTXAudio() }
         var ranges: [String: [Int]] = [:]
         for (name, control) in Self.remoteControls { ranges[name] = [control.range.lowerBound, control.range.upperBound] }
+        // podziałki wskaźników łukowych (układ komputerowy w przeglądarce) - z tej samej kalibracji co na Macu
+        func ticks(_ list: [(Double, String)]) -> [[Any]] { list.map { [$0.0, $0.1] } }
+        let gauges: [String: Any] = [
+            "s": ticks(ContentView.sTicks), "po": ticks(ContentView.poTicks), "swr": ticks(ContentView.swrTicks),
+            "pct": ticks(ContentView.percentTicks), "swrRed": ContentView.position(3.0, MeterCalibration.swr)
+        ]
         send(["t": "auth_ok", "station": "FT-710", "lang": AppLanguage.current == .en ? "en" : "pl",
-              "ranges": ranges, "mycall": logbook?.myCall.uppercased() ?? ""])
+              "ranges": ranges, "mycall": logbook?.myCall.uppercased() ?? "", "gauges": gauges])
         lastClusterSignature = 0
         lastAlertsSignature = 0
         lastFT8ListSignature = 0
@@ -713,6 +763,8 @@ final class RemoteStation: ObservableObject {
     private func clientClosed(_ client: WebSocketServer.Client) {
         guard client.id == operatorClient?.id else { return }
         unkey(reason: L("rozłączenie operatora"))
+        scopeMode = "rf"
+        ft8?.setRemoteWaterfall(false)
         if remoteFT8TX, let ft8 {                              // FT8 włączone z przeglądarki - wyłącz
             ft8.txEnabled = false
             if ft8.transmitting { ft8.haltTX(L("rozłączenie operatora zdalnego")) }

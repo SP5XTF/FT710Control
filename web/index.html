@@ -69,8 +69,9 @@ details p { margin: 6px 0 0; }
 #pBands { grid-area: bands; } #pRadio { grid-area: radio; } #pAudio { grid-area: audio; }
 #pLog { grid-area: log; } #pCW { grid-area: cw; } #pCluster { grid-area: cluster; } #pAlerts { grid-area: alerts; }
 #pFT8 { grid-area: ft8; }
-.ft8row { display: grid; grid-template-columns: 54px 30px 40px 1fr; gap: 6px; padding: 4px; border-bottom: 1px solid var(--line); cursor: pointer; font-family: ui-monospace, Menlo, monospace; font-size: 13px; }
+.ft8row { display: grid; grid-template-columns: 70px 34px 44px minmax(0, 1fr); gap: 8px; white-space: nowrap; padding: 4px; border-bottom: 1px solid var(--line); cursor: pointer; font-family: ui-monospace, Menlo, monospace; font-size: 13px; }
 .ft8row:hover { background: #21262d; }
+.ft8row > span:last-child { overflow: hidden; text-overflow: ellipsis; }
 .ft8row.me { background: rgba(255, 77, 77, 0.18); }
 .sec { border-top: 1px solid var(--line); margin-top: 8px; padding-top: 6px; }
 .sec summary { cursor: pointer; font-size: 11px; letter-spacing: 1px; color: var(--amber); font-weight: 700; }
@@ -88,6 +89,45 @@ details p { margin: 6px 0 0; }
     grid-template-areas: "freq scope" "meters scope" "bands ft8" "radio ft8" "radio log" "cw cluster" "audio alerts"; }
   #trace { height: 130px; }
   #wf { height: 340px; }
+}
+/* Układ komputerowy (od 1200 px) - jak program na Macu: pasma | VFO, wskaźniki, skop | radio; zakładki na dole */
+.deskOnly { display: none !important; }
+.gauge { height: 92px; background: #0b0f14; border-radius: 6px; image-rendering: auto; }
+#rxTile { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 92px;
+  background: #0b0f14; border-radius: 6px; font: 700 30px -apple-system, sans-serif; color: var(--green); }
+#rxTile.tx { color: var(--red); }
+@media (min-width: 1200px) {
+  /* Wysoka kolumna radia obejmuje kilka wierszy - nadmiar wysokości przejmuje wiersz elastyczny (1fr) pod
+     zakładkami, więc VFO, wskaźniki, skop i zakładki przylegają do siebie bez pustych przerw. */
+  #grid { grid-template-columns: 210px minmax(0, 1fr) 380px 320px; align-items: start;
+    grid-template-rows: auto auto auto 1fr auto;
+    grid-template-areas: "bands freq meters radio" "bands scope scope radio" "tabbar tabbar tabbar radio"
+                         "tabs tabs tabs radio" "tabs tabs tabs audio"; }
+  /* suwaki: etykieta | suwak | wartość w jednej linii (jak na Macu) - kolumna radia o połowę krótsza */
+  /* wszystko w granicach kolumny: suwak może się zwężać (min-width 0), wartość ma stałe miejsce */
+  .ctl { grid-template-columns: 70px minmax(0, 1fr); margin: 3px 0; }
+  .ctl > * { min-width: 0; }
+  .ctl .row { flex-wrap: nowrap; min-width: 0; }
+  .ctl .row input[type=range] { flex: 1 1 auto; min-width: 0; width: 100%; }
+  .ctl .row span { width: 58px !important; flex: none; font-size: 12px; text-align: right; overflow: hidden; white-space: nowrap; }
+  /* przyciski wyboru (ATT, IPO, AGC) - mieszczą się w kolumnie, w razie potrzeby zawijają */
+  #pRadio .seg { flex-wrap: wrap; max-width: 100%; }
+  #pRadio .seg button { padding: 6px 9px; font-size: 13px; }
+  #pRadio, #pAudio { overflow: hidden; }
+  .ctl b { font-size: 12px; line-height: 1.15; }
+  #pRadio .sec { margin-top: 6px; padding-top: 4px; }
+  #pLog, #pFT8, #pCluster, #pCW, #pAlerts { grid-area: tabs; }
+  #tabBar { grid-area: tabbar; display: flex !important; gap: 4px; flex-wrap: wrap; }
+  #tabBar button { font-size: 12px; font-weight: 600; letter-spacing: .5px; padding: 6px 12px; }
+  #gauges { display: grid !important; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .phoneOnly { display: none !important; }
+  .tabOff { display: none !important; }
+  #pCW.hidden.tabOn { display: block !important; }
+  #freq { font-size: 46px; }
+  #trace { height: 150px; }
+  #wf { height: 360px; }
+  .list { max-height: 320px; }
+  #pFT8 .list { max-height: 300px !important; }
 }
 </style>
 </head>
@@ -112,6 +152,10 @@ details p { margin: 6px 0 0; }
   </div>
 
   <div id="grid">
+    <div id="tabBar" class="deskOnly">
+      <button data-tab="pLog" data-t="DZIENNIK">DZIENNIK</button><button data-tab="pCluster">DX CLUSTER</button>
+      <button data-tab="pFT8">FT8/FT4</button><button data-tab="pCW">CW</button><button data-tab="pAlerts" data-t="ALERTY">ALERTY</button>
+    </div>
     <div id="pFreq" class="panel">
       <div id="freq">–</div>
       <div id="modeTx"><span id="mode" class="badge">–</span><span id="txBadge" class="badge tx hidden">TX</span><span id="splitBadge" class="badge hidden">SPLIT</span></div>
@@ -127,6 +171,10 @@ details p { margin: 6px 0 0; }
     </div>
 
     <div id="pScope" class="panel">
+      <div class="row" style="margin-bottom:4px">
+        <button id="smRF" class="tog on">RF</button><button id="smFT8" class="tog">FT8</button>
+        <button id="smTX" class="tog" style="display:none" data-t="Dotknięcie: TX">Dotknięcie: TX</button>
+      </div>
       <div id="traceWrap"><canvas id="trace" width="850" height="90"></canvas><div id="spots"></div></div>
       <canvas id="wf" width="850" height="170"></canvas>
       <div id="axis"><span id="ax0"></span><span id="ax1"></span><span id="ax2"></span><span id="ax3"></span><span id="ax4"></span></div>
@@ -134,11 +182,17 @@ details p { margin: 6px 0 0; }
     </div>
 
     <div id="pMeters" class="panel">
+      <div id="gauges" class="deskOnly">
+        <canvas id="gS" class="gauge"></canvas><canvas id="gPO" class="gauge"></canvas><canvas id="gSWR" class="gauge"></canvas>
+        <canvas id="gCOMP" class="gauge"></canvas><canvas id="gALC" class="gauge"></canvas><div id="rxTile">RX</div>
+      </div>
+      <div class="phoneOnly">
       <div class="meter"><b>S</b><div class="bar"><div id="sBar"></div></div><span id="sTxt">–</span></div>
       <div class="meter"><b>PO</b><div class="bar"><div id="poBar"></div></div><span id="poTxt">–</span></div>
       <div class="meter"><b>COMP</b><div class="bar"><div id="compBar"></div></div><span id="compTxt">–</span></div>
       <div class="meter"><b>ALC</b><div class="bar"><div id="alcBar"></div></div><span id="alcTxt">–</span></div>
       <div class="meter"><b>SWR</b><div class="bar"><div id="swrBar"></div></div><span id="swrTxt">–</span></div>
+      </div>
     </div>
 
     <div id="pBands" class="panel">

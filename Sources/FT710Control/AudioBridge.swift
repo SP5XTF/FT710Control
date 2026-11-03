@@ -27,6 +27,19 @@ final class AudioBridge: @unchecked Sendable {
     private var pending = 0
 
     private(set) var running = false
+    /// Czas ostatniej próbki z wejścia - strażnik w AudioManager wykrywa zatrzymany tor (np. po uśpieniu monitora).
+    private var lastInputTime: CFAbsoluteTime = 0
+    /// Zmiana konfiguracji silnika audio (zniknęło urządzenie, np. głośniki monitora po uśpieniu) - silnik
+    /// zatrzymuje się i wymaga ponownego uruchomienia; wywoływane na głównym wątku.
+    var onConfigurationChange: (@Sendable () -> Void)?
+    private var configObservers: [NSObjectProtocol] = []
+
+    /// Sekundy od ostatniej próbki z wejścia (nieskończoność - tor nie działa).
+    var secondsSinceInput: Double {
+        lock.lock(); defer { lock.unlock() }
+        guard running, lastInputTime > 0 else { return .infinity }
+        return CFAbsoluteTimeGetCurrent() - lastInputTime
+    }
     /// Gdy true, dźwięk nie jest przekazywany dalej (miernik poziomu nadal działa).
     var muted = false
     var onLevel: (@Sendable (Float) -> Void)?
@@ -52,7 +65,14 @@ final class AudioBridge: @unchecked Sendable {
         playEngine = newPlay
         player = newPlayer
         pending = 0
+        lastInputTime = CFAbsoluteTimeGetCurrent()            // start - strażnik daje czas na pierwsze próbki
         lock.unlock()
+        for engine in [newCapture, newPlay] {
+            configObservers.append(NotificationCenter.default.addObserver(
+                forName: .AVAudioEngineConfigurationChange, object: engine, queue: .main) { [weak self] _ in
+                    self?.onConfigurationChange?()
+                })
+        }
 
         do {
             let input = captureEngine.inputNode
@@ -81,6 +101,8 @@ final class AudioBridge: @unchecked Sendable {
     }
 
     func stop() {
+        for observer in configObservers { NotificationCenter.default.removeObserver(observer) }
+        configObservers.removeAll()
         lock.lock()
         let wasRunning = running
         running = false                                       // wątek audio przestaje kolejkować od razu
@@ -96,6 +118,7 @@ final class AudioBridge: @unchecked Sendable {
 
     private func forward(_ buffer: AVAudioPCMBuffer) {
         let frames = Int(buffer.frameLength)
+        lock.lock(); lastInputTime = CFAbsoluteTimeGetCurrent(); lock.unlock()
         if let channel = buffer.floatChannelData?[0], frames > 0 {
             var sum: Float = 0
             for i in 0..<frames { sum += channel[i] * channel[i] }

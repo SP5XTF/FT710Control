@@ -16,6 +16,8 @@ enum RadioControl: String, CaseIterable, Hashable {
     case amc
     /// Prędkość klucza elektronicznego radia (KS, 4-60 WPM).
     case keySpeed
+    /// NAR - wąski filtr odbiornika (NA0: 0 wyłączony, 1 włączony).
+    case narrow
 
     /// Prefiks odpowiedzi (i komendy) - po nim następuje wartość liczbowa.
     var prefix: String {
@@ -45,6 +47,7 @@ enum RadioControl: String, CaseIterable, Hashable {
         case .split: return "ST"
         case .amc: return "AO"
         case .keySpeed: return "KS"
+        case .narrow: return "NA0"
         }
     }
 
@@ -63,6 +66,7 @@ enum RadioControl: String, CaseIterable, Hashable {
         case .split: return 1
         case .amc: return 3
         case .keySpeed: return 3
+        case .narrow: return 1
         }
     }
 
@@ -87,6 +91,7 @@ enum RadioControl: String, CaseIterable, Hashable {
         case .split: return 0...1
         case .amc: return 1...100
         case .keySpeed: return 4...60
+        case .narrow: return 0...1
         }
     }
 

@@ -206,10 +206,11 @@ The **Station profile** window opens on first launch, and later from the **FT710
 **Prawa kolumna**
 • **AF, SQL, RF** – głośność, blokada szumów, wzmocnienie w.cz.; **TX** – moc nadajnika.
 • **IPO / AMP1 / AMP2** – przedwzmacniacz, **ATT** – tłumik.
-• **DNR, NB, PROC** – suwak z wyłączaniem: **0 = OFF**, powyżej zera – włączone z tym poziomem.
+• **DNR, NB, PROC** – jak w radiu: **przycisk** włącza i wyłącza, **suwak** obok (odpowiednik pokrętła) zmienia poziom zapamiętany w radiu – także przy wyłączonej funkcji (suwak przygaszony); ponowne włączenie wraca do tego poziomu.
 • **MIC, AMC** – poziom mikrofonu i automatycznej kontroli mocy.
 
 Ustawienia są odczytywane z radia po połączeniu i co ok. 3 s, więc zmiany gałkami na radiu też są widoczne. Kontrolka wyszarzona = radio nie odpowiedziało na jej komendę (lista w zakładce LOG CAT).
+• **NAR** – wąski filtr radia (przycisk w ramce „RX DSP / Filtr”, obok NOTCH, DNF i CONTOUR; także w panelu zdalnym, sekcja Filtr). Szerokość RX BW zmienia się wtedy na zakres wąski radia. **DNR** – cyfrowa redukcja szumu radia (prawa kolumna: włączenie i poziom 1–15; w panelu zdalnym – sekcja Odbiór).
 """,
                   bodyEN: """
 **RX DSP / Filter** (left column)
@@ -222,10 +223,11 @@ Ustawienia są odczytywane z radia po połączeniu i co ok. 3 s, więc zmiany ga
 **Right column**
 • **AF, SQL, RF** – volume, squelch, RF gain; **TX** – transmitter power.
 • **IPO / AMP1 / AMP2** – preamplifier, **ATT** – attenuator.
-• **DNR, NB, PROC** – slider with off position: **0 = OFF**, above zero – on at that level.
+• **DNR, NB, PROC** – as on the radio: the **button** turns it on and off, the **slider** next to it (the knob equivalent) changes the level remembered in the radio – also while the function is off (slider dimmed); turning it back on returns to that level.
 • **MIC, AMC** – microphone gain and automatic power control.
 
 Settings are read from the radio after connecting and about every 3 s, so changes made with the radio's knobs show up too. A greyed-out control = the radio did not answer its command (listed in the CAT LOG tab).
+• **NAR** – the radio's narrow filter (button in the “RX DSP / Filter” box, next to NOTCH, DNF and CONTOUR; also in the remote panel, Filter section). RX BW then switches to the radio's narrow range. **DNR** – the radio's digital noise reduction (right column: on/off and level 1–15; in the remote panel – Receive section).
 """),
 
         HelpTopic(id: "tx", icon: "antenna.radiowaves.left.and.right", titlePL: "Nadawanie i bezpieczeństwo", titleEN: "Transmitting and safety",
@@ -233,7 +235,7 @@ Settings are read from the radio after connecting and about every 3 s, so change
 Nadawanie z aplikacji jest celowo zabezpieczone – wszystkie elementy w bloku na dole prawej kolumny.
 
 • **Odblokuj TX** – bez tej zgody PTT, TUNE i komunikaty są nieaktywne. Wyłączenie zgody zawsze kończy nadawanie.
-• **Limit czasu** (1 / 3 / 5 min) – po upływie aplikacja sama wysyła TX0 i blokuje PTT do puszczenia przycisku. Obejmuje PTT z aplikacji, komunikaty z pamięci radia i TUNE (ręczny mikrofon przy radiu – nie).
+• **Limit czasu** (1 / 3 / 5 min) – na kafelku RX/TX obok wskaźników: „limit TX: 3 min” na odbiorze, a przy nadawaniu czas i limit, np. „0:42 / 3:00” (ostatnie 30 s – pomarańczowo). Po upływie aplikacja sama wysyła TX0 i blokuje PTT do puszczenia przycisku. Obejmuje PTT z aplikacji, komunikaty z pamięci radia i TUNE (ręczny mikrofon przy radiu – nie).
 • **PTT** – nadawanie tylko podczas trzymania przycisku myszą.
 • **TUNE** – ON/OFF włącza tuner, przycisk TUNE uruchamia strojenie (radio nadaje nośną).
 • **Komunikaty** (CQ, Call, …) – odtwarzają komunikaty nagrane w pamięci radia (fonia w SSB/AM/FM, CW w CW). Opis przycisku: prawy przycisk → „Zmień opis…”. **STOP** zatrzymuje komunikat i kończy nadawanie.
@@ -248,7 +250,7 @@ Pierwsze próby nadawania rób na sztucznym obciążeniu, przy małej mocy, obse
 Transmitting from the app is deliberately protected – all controls are in the block at the bottom of the right column.
 
 • **Enable TX** – without this consent PTT, TUNE and messages are inactive. Turning it off always ends transmission.
-• **Time limit** (1 / 3 / 5 min) – when it expires the app sends TX0 itself and locks PTT until the button is released. It covers PTT from the app, radio memory messages and TUNE (not the hand microphone at the radio).
+• **Time limit** (1 / 3 / 5 min) – on the RX/TX tile next to the meters: “TX limit: 3 min” while receiving, and while transmitting the time and the limit, e.g. “0:42 / 3:00” (the last 30 s in orange). When it expires the app sends TX0 itself and locks PTT until the button is released. It covers PTT from the app, radio memory messages and TUNE (not the hand microphone at the radio).
 • **PTT** – transmits only while the button is held with the mouse.
 • **TUNE** – ON/OFF switches the tuner, the TUNE button starts tuning (the radio transmits a carrier).
 • **Messages** (CQ, Call, …) – play messages recorded in the radio's memory (voice in SSB/AM/FM, CW in CW). Button label: right-click → “Edit label…”. **STOP** stops the message and ends transmission.
@@ -817,6 +819,7 @@ Jak to jest liczone:
 • Porównanie na żywo: WSJT-X może działać równolegle na tym samym wejściu dźwięku (bez CAT – albo przez CAT Share).
 • **Zmiana FT8 ↔ FT4** przestraja radio na częstotliwość nowego trybu na tym samym paśmie (np. 40 m: 7,074 ↔ 7,0475 MHz). Gdy nowy tryb nie ma częstotliwości na paśmie (FT4 na 160 i 60 m), częstotliwość zostaje bez zmian.
 • Kolumna **km** w obu listach: odległość od Twojego lokatora – z lokatora stacji (z komunikatu albo z jej wcześniejszych komunikatów w tej sesji); „~” – bez lokatora, przybliżona ze środka kraju (cty.dat). Okno „Częstotliwość odbioru” jest szersze – mieści cały komunikat z odległością.
+• **Dane z QRZ/HamQTH w dzienniku:** po wybraniu stacji (dwuklik, odpowiedź na CQ, kolejny wołający, Hound) program od razu w tle pobiera jej dane, więc łączność zapisuje się z imieniem, QTH i resztą (tylko puste pola; lokator z komunikatu FT8 zostaje; stacja spoza swojego kraju – tylko imię). Gdy dane nie zdążą przyjść, łączność jest uzupełniana zaraz po zapisie.
 
 **Hound – DXpedycje (Fox/Hound)**
 • Gdy DXpedycja ogłasza tryb Fox/Hound (zwykle na własnej, nietypowej częstotliwości), zaznacz **Hound** w panelu nadawania. TX przechodzi powyżej 1000 Hz (Fox nie odpowiada wołającym niżej), nadawanie w 2. cyklu (1. należy do Foxa). Podsumowanie pod przyciskami świeci na pomarańczowo.
@@ -891,6 +894,7 @@ How it is determined:
 • Live comparison: WSJT-X can run in parallel on the same audio input (without CAT – or through CAT Share).
 • **Switching FT8 ↔ FT4** retunes the radio to the new mode's frequency on the same band (e.g. 40 m: 7.074 ↔ 7.0475 MHz). When the new mode has no frequency on the band (FT4 on 160 and 60 m), the frequency stays unchanged.
 • The **km** column in both lists: distance from your locator – from the station's locator (from the message or its earlier messages in this session); “~” – no locator, approximated from the middle of the country (cty.dat). The “Rx frequency” window is wider – it fits the whole message with the distance.
+• **QRZ/HamQTH data in the log:** once a station is chosen (double-click, answering a CQ, the next caller, Hound), the program fetches its data in the background, so the QSO is logged with name, QTH and the rest (empty fields only; the locator from the FT8 message stays; a station away from home – name only). If the data does not arrive in time, the QSO is completed right after logging.
 
 **Hound – DXpeditions (Fox/Hound)**
 • When a DXpedition announces Fox/Hound (usually on its own, unusual frequency), tick **Hound** in the transmit panel. TX moves above 1000 Hz (the Fox does not answer callers lower down), transmitting in the 2nd period (the 1st belongs to the Fox). The summary under the buttons turns orange.
@@ -1092,6 +1096,7 @@ macOS pyta o dostęp do mikrofonu przy pierwszym użyciu – zgoda jest potrzebn
 **Zapisz ustawienia** zapamiętuje urządzenia (po stałym identyfikatorze), głośności, nadawanie przez USB i stan odsłuchu – program startuje z nimi do następnego zapisu. Napis „Zmiany niezapisane” oznacza, że bieżące ustawienia różnią się od zapisanych.
 • **Pasek stanu** (na dole okna): ikona głośnika wycisza i odcisza odsłuch (poziom zostaje zapamiętany), suwak to ta sama głośność co w zakładce AUDIO; głośność jest zapamiętywana między uruchomieniami.
 • **Korektor nadawania (TX)** – 12 pasm (60, 100, 160, 250, 400, 630 Hz, 1; 1,4; 1,8; 2,3; 2,8; 3,3 kHz), ±12 dB, dla mikrofonu Maca i mikrofonu panelu zdalnego (dźwięk przez USB do radia). Gotowe ustawienia: **Płasko**, **DX – przebicie** (obcięte niskie, podbite 1,4–2,8 kHz – czytelność w szumie i pile-upie), **Rozmowa – pełny głos**, **Zawody**; ruszenie suwaka – „Własne”. Korektor zmienia barwę, nie głośność (całość ściszana o największe podbicie – nie przesteruje toru); poziom ustaw MIC GAIN w radiu. FT-710 ma własny korektor mikrofonu – na początek ustaw go płasko, żeby oba się nie sumowały. Sprawdzaj ALC i najlepiej odsłuch na drugim odbiorniku albo WebSDR.
+• **Samoczynne wznowienie odsłuchu:** gdy macOS zatrzyma dźwięk (np. po uśpieniu monitora z głośnikami, wybudzeniu Maca albo zmianie urządzeń audio), program sam uruchamia odsłuch od nowa – a z nim widmo audio i wodospad FT8, które karmi ten sam dźwięk. Dodatkowo co 5 s sprawdza, czy dźwięk z radia płynie. Nie trzeba ręcznie wyłączać i włączać odsłuchu.
 """,
                   bodyEN: """
 **AUDIO** tab:
@@ -1120,6 +1125,7 @@ macOS asks for microphone access on first use – permission is also needed to r
 **Save settings** stores the devices (by a permanent identifier), volumes, USB transmit and the monitoring state – the program starts with them until you save again. “Unsaved changes” means the current settings differ from the saved ones.
 • **Status bar** (at the bottom of the window): the speaker icon mutes and unmutes listening (the level is remembered), the slider is the same volume as in the AUDIO tab; the volume is remembered between launches.
 • **Transmit equalizer (TX)** – 12 bands (60, 100, 160, 250, 400, 630 Hz, 1, 1.4, 1.8, 2.3, 2.8, 3.3 kHz), ±12 dB, for the Mac microphone and the remote panel microphone (audio over USB to the radio). Presets: **Flat**, **DX – punch** (lows cut, 1.4–2.8 kHz boosted – readability in noise and pile-ups), **Ragchew – full voice**, **Contest**; moving a slider – “Custom”. The equalizer changes the tone, not the loudness (the whole is lowered by the largest boost – it does not overdrive the path); set the level with MIC GAIN in the radio. The FT-710 has its own microphone equalizer – start with it flat so the two do not add up. Watch ALC and preferably listen on a second receiver or a WebSDR.
+• **Automatic monitoring restart:** when macOS stops audio (e.g. after a monitor with speakers goes to sleep, after the Mac wakes or an audio device change), the program restarts monitoring itself – and with it the audio spectrum and the FT8 waterfall, which are fed by the same audio. It also checks every 5 s that audio from the radio is flowing. No need to turn monitoring off and on by hand.
 """),
 
         HelpTopic(id: "remote", icon: "iphone.radiowaves.left.and.right", titlePL: "Praca zdalna", titleEN: "Remote operation",
@@ -1131,9 +1137,9 @@ Sterowanie radiem z przeglądarki (iPhone, iPad, dowolny komputer).
 • **Język PL / EN** – przycisk w rogu (zapamiętany w przeglądarce); domyślnie język programu.
 • **Skop** ze strojeniem dotknięciem i **znakami stacji** z DX Cluster i POTA – te same kolory co na skopie w programie (obserwowany, nowy kraj, niepotwierdzony; POTA z zieloną obwódką); dotknięcie znaku stroi radio. Wyświetlanie zależy od przełączników „Stacje na skopie” w zakładce EKRAN.
 • **Pasma** pamiętają ostatnią częstotliwość i tryb (w tej przeglądarce); domyślnie fonia (LSB poniżej 10 MHz, USB powyżej), 30 m – CW.
-• **Radio**: ATT, IPO, AGC, moc (suwak), w CW prędkość klucza radia (KS); zwijane sekcje **Odbiór** (AF, RF, SQL, NB i NR z poziomami, DNF), **Filtr** (szerokość, przesunięcie IF, notch i contour z częstotliwością), **Nadawanie** (MIC, PROC z poziomem, AMC), **Tuner i pamięci** (tuner, strojenie TUNE, komunikaty z pamięci radia M1–M5). Przy częstotliwości: VFO B, **A=B**, **A↔B**, **SPLIT**.
+• **Radio**: ATT, IPO, AGC, moc (suwak), w CW prędkość klucza radia (KS); zwijane sekcje **Odbiór** (AF, RF, SQL, NB i DNR z poziomami, DNF), **Filtr** (NAR, szerokość, przesunięcie IF, notch i contour z częstotliwością), **Nadawanie** (MIC, PROC z poziomem, AMC), **Tuner i pamięci** (tuner, strojenie TUNE, komunikaty z pamięci radia M1–M5). Przy częstotliwości: VFO B, **A=B**, **A↔B**, **SPLIT**.
 • **Dziennik**: znak (dane z QRZ i „było: N QSO” jak w programie), RST (puste – domyślne dla trybu), imię, QTH, lokator, uwagi; częstotliwość i tryb z radia; zapis tą samą funkcją co w programie (wysyłka do serwisów według ustawień); lista ostatnich QSO.
-• **FT8 / FT4**: tryb, dekodowanie, przyciski pasm (częstotliwości bieżącego trybu), Hound; lista ostatnich 40 komunikatów w kolorach jak na Macu („do mnie” wyróżnione). **Dotknięcie komunikatu** – wołanie stacji i włączenie TX (jak dwuklik na Macu); **CQ**, **Włącz/Wyłącz TX**, **STOP**; widać następny komunikat, stację QSO, TX/RX Hz i status. Dekodowanie i sygnał – na Macu (odsłuch w zakładce AUDIO musi działać). Nadawanie – te same warunki co PTT (zgoda zdalna zastępuje „Odblokuj TX”); po rozłączeniu przeglądarki TX FT8 się wyłącza.
+• **FT8 / FT4**: tryb, dekodowanie, przyciski pasm (częstotliwości bieżącego trybu), Hound; lista ostatnich 40 komunikatów w kolorach jak na Macu („do mnie” wyróżnione). **Dotknięcie komunikatu** – wołanie stacji i włączenie TX (jak dwuklik na Macu). Nad skopem przełącznik **RF / FT8**: wybór pasma w panelu FT8 przełącza skop na **wodospad FT8** (0–3000 Hz, kolory jak na Macu, znaczniki RX i TX) – dotknięcie ustawia RX, a z przełącznikiem „Dotknięcie: TX” – TX (jak kliknięcie i Shift+kliknięcie na Macu); **CQ**, **Włącz/Wyłącz TX**, **STOP**; widać następny komunikat, stację QSO, TX/RX Hz i status. Dekodowanie i sygnał – na Macu (odsłuch w zakładce AUDIO musi działać). Nadawanie – te same warunki co PTT (zgoda zdalna zastępuje „Odblokuj TX”); po rozłączeniu przeglądarki TX FT8 się wyłącza.
 • **CW** (w trybie CW): tekst z klawiatury i makra (CQ, 5NN, TU…; {MY} – Twój znak, {CALL} – znak z dziennika), STOP.
 • **DX Cluster** i **Alerty**: listy z kolorami jak w programie; dotknięcie stroi radio i wpisuje znak do dziennika.
 • **Nadawanie z przeglądarki** (PTT, CW, komunikaty z pamięci, TUNE) – te same warunki: „Pozwól na nadawanie zdalne” i połączenie szyfrowane (Tailscale/HTTPS); po rozłączeniu przeglądarki nadawanie CW i komunikatu jest przerywane.
@@ -1159,6 +1165,7 @@ Przełącznik **Dostęp z sieci domowej** – adres `http://<adres-maca>:8710`: 
 **Bezpieczeństwo:** PTT działa tylko podczas trzymania przycisku; brak sygnału od przeglądarki przez 0,5 s wyłącza nadawanie na stacji. Jeden operator naraz; 5 błędnych haseł blokuje logowanie na minutę.
 
 iPhone: jeśli nic nie słychać, sprawdź głośność; strona próbuje grać także w trybie cichym.
+• **Układ na komputerze** (okno przeglądarki od ok. 1200 pikseli szerokości): jak program na Macu – po lewej pasma i tryby, w środku VFO, wskaźniki łukowe (S, PO, SWR, COMP, ALC, RX/TX) i duży skop, po prawej radio (sekcje rozwinięte) oraz audio i PTT; na dole zakładki **Dziennik, DX Cluster, FT8/FT4, CW, Alerty** (wybór zapamiętywany; skop FT8 otwiera zakładkę FT8). Na telefonie układ bez zmian – panele jeden pod drugim.
 """,
                   bodyEN: """
 Control the radio from a browser (iPhone, iPad, any computer).
@@ -1168,9 +1175,9 @@ Control the radio from a browser (iPhone, iPad, any computer).
 • **Language PL / EN** – a button in the corner (remembered in the browser); by default the program's language.
 • **Scope** with tap-to-tune and **station calls** from DX Cluster and POTA – the same colours as on the program's scope (watched, new entity, unconfirmed; POTA with a green outline); tapping a call tunes the radio. Display depends on the “Stations on the scope” switches in the DISPLAY tab.
 • **Bands** remember the last frequency and mode (in this browser); by default phone (LSB below 10 MHz, USB above), 30 m – CW.
-• **Radio**: ATT, IPO, AGC, power (slider), in CW the radio's key speed (KS); collapsible sections **Receive** (AF, RF, SQL, NB and NR with levels, DNF), **Filter** (width, IF shift, notch and contour with frequency), **Transmit** (MIC, PROC with level, AMC), **Tuner and memories** (tuner, TUNE, radio memory messages M1–M5). Next to the frequency: VFO B, **A=B**, **A↔B**, **SPLIT**.
+• **Radio**: ATT, IPO, AGC, power (slider), in CW the radio's key speed (KS); collapsible sections **Receive** (AF, RF, SQL, NB and DNR with levels, DNF), **Filter** (NAR, width, IF shift, notch and contour with frequency), **Transmit** (MIC, PROC with level, AMC), **Tuner and memories** (tuner, TUNE, radio memory messages M1–M5). Next to the frequency: VFO B, **A=B**, **A↔B**, **SPLIT**.
 • **Log**: call (QRZ data and “worked: N QSOs” as in the program), RST (empty – the mode default), name, QTH, locator, comment; frequency and mode from the radio; saved by the same function as in the program (upload to services per settings); a list of recent QSOs.
-• **FT8 / FT4**: mode, decoding, band buttons (frequencies of the current mode), Hound; a list of the last 40 messages in the Mac's colours (“to me” highlighted). **Tapping a message** – call the station and enable TX (like a double-click on the Mac); **CQ**, **Enable/Disable TX**, **STOP**; the next message, the QSO station, TX/RX Hz and the status are shown. Decoding and the signal – on the Mac (listening in the AUDIO tab must run). Transmitting – the same conditions as PTT (remote permission replaces “Enable TX”); when the browser disconnects, FT8 TX is turned off.
+• **FT8 / FT4**: mode, decoding, band buttons (frequencies of the current mode), Hound; a list of the last 40 messages in the Mac's colours (“to me” highlighted). **Tapping a message** – call the station and enable TX (like a double-click on the Mac). Above the scope an **RF / FT8** switch: choosing a band in the FT8 panel switches the scope to the **FT8 waterfall** (0–3000 Hz, the Mac's colours, RX and TX markers) – a tap sets RX, and with the “Tap: TX” switch – TX (like a click and Shift+click on the Mac); **CQ**, **Enable/Disable TX**, **STOP**; the next message, the QSO station, TX/RX Hz and the status are shown. Decoding and the signal – on the Mac (listening in the AUDIO tab must run). Transmitting – the same conditions as PTT (remote permission replaces “Enable TX”); when the browser disconnects, FT8 TX is turned off.
 • **CW** (in CW mode): typed text and macros (CQ, 5NN, TU…; {MY} – your call, {CALL} – the call from the log), STOP.
 • **DX Cluster** and **Alerts**: lists with the program's colours; tapping tunes the radio and puts the call into the log.
 • **Transmitting from the browser** (PTT, CW, memory messages, TUNE) – the same conditions: “Allow remote transmit” and an encrypted connection (Tailscale/HTTPS); when the browser disconnects, CW and message transmission is stopped.
@@ -1196,6 +1203,7 @@ Control the radio from a browser (iPhone, iPad, any computer).
 **Safety:** PTT works only while the button is held; no signal from the browser for 0.5 s ends transmission at the station. One operator at a time; 5 wrong passwords block login for a minute.
 
 iPhone: if you hear nothing, check the volume; the page also tries to play in silent mode.
+• **Computer layout** (a browser window from about 1200 pixels wide): like the Mac program – bands and modes on the left, VFO, arc meters (S, PO, SWR, COMP, ALC, RX/TX) and a large scope in the middle, the radio (sections expanded) plus audio and PTT on the right; tabs at the bottom: **Log, DX Cluster, FT8/FT4, CW, Alerts** (the choice is remembered; the FT8 scope opens the FT8 tab). On a phone the layout is unchanged – panels one below another.
 """),
 
         HelpTopic(id: "diag", icon: "stethoscope", titlePL: "Diagnostyka", titleEN: "Diagnostics",

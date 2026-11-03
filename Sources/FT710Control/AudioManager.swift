@@ -1,5 +1,6 @@
 import Foundation
 import AVFoundation
+import AppKit
 import CoreAudio
 import SwiftUI
 
@@ -124,6 +125,31 @@ final class AudioManager: ObservableObject {
         tx.muted = true
         tx.appliesTXEqualizer = true                       // korektor nadawania tylko w torze mikrofon → radio
         applyTXEQ()
+        // Odzyskiwanie toru dźwięku: zmiana konfiguracji silnika (np. głośniki monitora znikają po jego uśpieniu),
+        // wybudzenie monitora albo Maca i strażnik - odsłuch włączony, a dźwięk z radia nie płynie.
+        rx.onConfigurationChange = { [weak self] in
+            Task { @MainActor in self?.recoverAudio(L("zmiana urządzeń audio")) }
+        }
+        tx.onConfigurationChange = { [weak self] in
+            Task { @MainActor in self?.recoverAudio(L("zmiana urządzeń audio")) }
+        }
+        let workspace = NSWorkspace.shared.notificationCenter
+        for name in [NSWorkspace.screensDidWakeNotification, NSWorkspace.didWakeNotification] {
+            workspace.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
+                Task { @MainActor in
+                    try? await Task.sleep(nanoseconds: 2_000_000_000)      // system kończy przywracanie urządzeń
+                    guard let self, self.listening, self.rx.secondsSinceInput > 1.5 else { return }
+                    self.recoverAudio(L("wybudzenie"))
+                }
+            }
+        }
+        Task { @MainActor [weak self] in
+            while true {
+                try? await Task.sleep(nanoseconds: 5_000_000_000)
+                guard let self else { return }
+                if self.listening, self.rx.secondsSinceInput > 5 { self.recoverAudio(L("brak dźwięku z radia")) }
+            }
+        }
         rx.onLevel = { [levels = self.levels] level in Task { @MainActor in levels.update(rx: level) } }
         tx.onLevel = { [levels = self.levels] level in Task { @MainActor in levels.update(tx: level) } }
         rx.onSamples = { [analyzer = self.analyzer, tap = self.sampleTap, gate = self.spectrumGate] samples, rate in
@@ -253,6 +279,35 @@ final class AudioManager: ObservableObject {
                 message = nil
             } catch {
                 message = L("Odsłuch: {1}", error.localizedDescription)
+            }
+        }
+    }
+
+    /// Ponowne uruchomienie torów dźwięku z odświeżoną listą urządzeń (po uśpieniu numery urządzeń mogą się zmienić).
+    /// Odsłuch i wodospad FT8 (karmiony tym samym dźwiękiem) wracają same - bez ręcznego wyłączania odsłuchu.
+    private var recoveringAudio = false
+
+    func recoverAudio(_ reason: String) {
+        guard !recoveringAudio else { return }
+        recoveringAudio = true
+        Task { @MainActor in
+            defer { recoveringAudio = false }
+            try? await Task.sleep(nanoseconds: 700_000_000)
+            refreshDevices()
+            if listening {
+                rx.stop()
+                do {
+                    try rx.start(inputID: radioIn, outputID: speakerOut)
+                    rx.muted = keyed
+                    message = nil
+                    NSLog("FT710Control: odsłuch uruchomiony ponownie (%@)", reason)
+                } catch {
+                    message = L("Odsłuch: ponowne uruchamianie ({1}) - {2}", reason, error.localizedDescription)
+                }
+            }
+            if tx.running, !keyed {                            // tor mikrofonu - nie w trakcie nadawania
+                stopTXPath()
+                updateTXPath(armed: txArmed)
             }
         }
     }
