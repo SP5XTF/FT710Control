@@ -1,5 +1,6 @@
 import XCTest
 import SwiftUI
+import CoreLocation
 import FTX
 @testable import FT710Control
 
@@ -665,6 +666,144 @@ final class CoreLogicTests: XCTestCase {
         qth = "Warszawa"                                      // wpisane ręcznie (bez filled) - nigdy nie czyścimy
         auto.clear([("qth", qthBinding)])
         XCTAssertEqual(qth, "Warszawa")
+    }
+
+    /// Kopia ustawień: bez haseł i ustawień macOS; typy wracają bez zmian; obcy plik odrzucony.
+    func testSettingsBackupRoundTrip() throws {
+        XCTAssertFalse(SettingsBackup.isExportable("remotePassword"))
+        XCTAssertFalse(SettingsBackup.isExportable("clublog.apiKey"))
+        XCTAssertFalse(SettingsBackup.isExportable("someToken"))
+        XCTAssertFalse(SettingsBackup.isExportable("NSWindow Frame main"))
+        XCTAssertFalse(SettingsBackup.isExportable("update.lastCheck"))
+        XCTAssertTrue(SettingsBackup.isExportable("myCall"))
+        XCTAssertTrue(SettingsBackup.isExportable("txEQ.gains"))
+        let date = Date(timeIntervalSince1970: 1_800_000_000)
+        let settings: [String: Any] = ["myCall": "SP5XTF", "remotePort": 8710, "txEQ.enabled": true,
+                                       "txEQ.gains": [-12.0, 0.5, 3.0], "display": ["palette": "turbo"], "since": date]
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("test-\(UUID()).ft710settings")
+        defer { try? FileManager.default.removeItem(at: url) }
+        try SettingsBackup.write(settings.merging(["remotePassword": "tajne"]) { a, _ in a }, to: url)
+        let text = try String(contentsOf: url, encoding: .utf8)
+        XCTAssertTrue(text.contains("SP5XTF"))
+        XCTAssertFalse(text.contains("tajne"), "hasło nie trafia do pliku")
+        let backup = try SettingsBackup.read(url)
+        XCTAssertNil(backup.settings["remotePassword"], "hasło pominięte przy odczycie (także z cudzego pliku)")
+        XCTAssertEqual(backup.settings["myCall"] as? String, "SP5XTF")
+        XCTAssertEqual(backup.settings["remotePort"] as? Int, 8710)
+        XCTAssertEqual(backup.settings["txEQ.enabled"] as? Bool, true)
+        XCTAssertEqual(backup.settings["txEQ.gains"] as? [Double], [-12.0, 0.5, 3.0])
+        XCTAssertEqual((backup.settings["display"] as? [String: String])?["palette"], "turbo")
+        XCTAssertEqual(backup.settings["since"] as? Date, date)
+        XCTAssertEqual(backup.programVersion, ADIF.programVersion)
+        let foreign = FileManager.default.temporaryDirectory.appendingPathComponent("obcy-\(UUID()).plist")
+        defer { try? FileManager.default.removeItem(at: foreign) }
+        try PropertyListSerialization.data(fromPropertyList: ["a": 1], format: .xml, options: 0).write(to: foreign)
+        XCTAssertThrowsError(try SettingsBackup.read(foreign), "obcy plik odrzucony")
+    }
+
+    /// Deterministyczny szum gaussowski do testów modemu (SplitMix64 + Box-Muller).
+    private struct TestNoise {
+        var state: UInt64
+        mutating func next() -> Double {
+            state &+= 0x9E37_79B9_7F4A_7C15
+            var z = state
+            z = (z ^ (z >> 30)) &* 0xBF58_476D_1CE4_E5B9
+            z = (z ^ (z >> 27)) &* 0x94D0_49BB_1331_11EB
+            return Double((z ^ (z >> 31)) >> 11) / Double(1 << 53)
+        }
+        mutating func gaussian() -> Double {
+            let u1 = max(next(), 1e-12), u2 = next()
+            return (-2 * log(u1)).squareRoot() * cos(2 * Double.pi * u2)
+        }
+    }
+
+    /// PSK31/PSK63: nadanie → szum i odstrojenie 8 Hz → odbiór; sam szum nie daje tekstu (blokada); Varicode.
+    func testPSKLoopback() {
+        XCTAssertEqual(Varicode.codes.count, 128)
+        XCTAssertEqual(Set(Varicode.codes).count, 128, "kody unikalne")
+        XCTAssertTrue(Varicode.codes.allSatisfy { !$0.contains("00") && $0.hasPrefix("1") && $0.hasSuffix("1") })
+        let message = "CQ CQ DE SP5XTF SP5XTF KO02 pse k 73!"
+        let rate = 48_000.0
+        for baud in [31.25, 62.5] {
+            var signal = PSKModulator.modulate(message, sampleRate: rate, carrier: 1008, baud: baud, amplitude: 0.5)
+            signal = [Float](repeating: 0, count: 9_000) + signal + [Float](repeating: 0, count: 24_000)
+            // szum: SNR +3 dB w paśmie 2,5 kHz
+            let power = signal.reduce(0) { $0 + Double($1 * $1) } / Double(signal.count)
+            let sigma = (power / pow(10, 0.3) * (rate / 2) / 2_500).squareRoot()
+            var noise = TestNoise(state: UInt64(baud * 1000))
+            let noisy = signal.map { $0 + Float(sigma * noise.gaussian()) }
+            let decoder = PSKDecoder()
+            decoder.configure(baud: baud)
+            decoder.setCarrier(1000)                            // odbiór ustawiony 8 Hz obok - AFC dostraja
+            let text = decoder.decodeSynchronously(noisy, sampleRate: rate)
+            XCTAssertTrue(text.contains(message), "PSK\(baud == 31.25 ? 31 : 63): odebrano „\(text)”")
+            var quiet = TestNoise(state: 42)
+            let onlyNoise = (0..<Int(rate * 6)).map { _ in Float(sigma * quiet.gaussian()) }
+            let silence = PSKDecoder()
+            silence.configure(baud: baud)
+            XCTAssertEqual(silence.decodeSynchronously(onlyNoise, sampleRate: rate).count, 0,
+                           "sam szum - blokada nie przepuszcza śmieci")
+        }
+        XCTAssertEqual(PSKModulator.duration(of: "TEST", baud: 31.25), Double(Varicode.bits(for: "TEST").count) / 31.25)
+    }
+
+    /// Pomiar SWR: częstotliwość wybierania i nośna wewnątrz pasm (margines 1 kHz), właściwa liczba punktów; CSV.
+    @MainActor
+    func testSWRSweepFrequencies() {
+        for band in SWRSweep.bands {
+            for count in [5, 21, 51] {
+                let freqs = SWRSweep.frequencies(band: band.name, count: count)
+                XCTAssertEqual(freqs.count, count, "\(band.name)")
+                // radio sprawdza granice po częstotliwości wybierania (nośna - 1500 Hz) - musi być w paśmie z zapasem
+                XCTAssertTrue(freqs.allSatisfy { $0 - 1_500 >= band.low + 1_000 && $0 <= band.high - 1_000 }, "\(band.name): poza pasmem")
+                XCTAssertEqual(freqs, freqs.sorted(), "rosnąco")
+                XCTAssertEqual(Set(freqs).count, count, "\(band.name): bez powtórzeń")
+            }
+        }
+        XCTAssertTrue(SWRSweep.frequencies(band: "2m", count: 21).isEmpty, "tylko pasma FT-710")
+        let m = SWRMeasurement(date: Date(), band: "40m", watts: 5,
+                               points: [.init(hz: 7_001_000, swr: 1.8), .init(hz: 7_100_000, swr: 1.2), .init(hz: 7_199_000, swr: 2.1)])
+        XCTAssertEqual(m.best?.hz, 7_100_000)
+        XCTAssertEqual(SWRSweep.csv(m), "MHz;SWR\n7.0010;1.80\n7.1000;1.20\n7.1990;2.10\n")
+    }
+
+    /// Kto mnie słyszy: XML PSKReporter, najnowszy raport na odbiorcę i pasmo; położenie Słońca i noc.
+    @MainActor
+    func testHeardMeAndSolar() throws {
+        let xml = """
+        <?xml version="1.0" encoding="UTF-8"?>
+        <receptionReports currentSeconds="1793000000">
+          <lastSequenceNumber value="1"/>
+          <receptionReport receiverCallsign="dl1abc" receiverLocator="JO62qm" senderCallsign="SP5XTF" senderLocator="KO02me"
+            frequency="14075123" flowStartSeconds="1792999000" mode="FT8" isSender="1" sNR="-12"/>
+          <receptionReport receiverCallsign="DL1ABC" receiverLocator="JO62qm" senderCallsign="SP5XTF" frequency="14075200"
+            flowStartSeconds="1792999600" mode="FT8" sNR="-5"/>
+          <receptionReport receiverCallsign="K1ABC" receiverLocator="FN42" senderCallsign="SP5XTF" frequency="7075000"
+            flowStartSeconds="1792999300" mode="FT8"/>
+          <receptionReport receiverCallsign="BAD" senderCallsign="SP5XTF" frequency="7075000" flowStartSeconds="1"/>
+        </receptionReports>
+        """
+        let parsed = HeardMeService.parse(Data(xml.utf8))
+        XCTAssertEqual(parsed.count, 3, "raport bez lokatora pominięty")
+        let latest = HeardMeService.latestPerReceiver(parsed)
+        XCTAssertEqual(latest.count, 2, "DL1ABC na 20 m - jeden, najnowszy")
+        XCTAssertEqual(latest.first { $0.receiver == "DL1ABC" }?.snr, -5)
+        XCTAssertEqual(latest.first { $0.receiver == "K1ABC" }?.band, "40m")
+        XCTAssertNil(latest.first { $0.receiver == "K1ABC" }?.snr)
+        let utc = TimeZone(identifier: "UTC")!
+        func date(_ y: Int, _ m: Int, _ d: Int, _ h: Int) -> Date {
+            var c = DateComponents(); c.year = y; c.month = m; c.day = d; c.hour = h; c.timeZone = utc
+            return Calendar(identifier: .gregorian).date(from: c)!
+        }
+        let equinox = SolarTerminator.subsolarPoint(at: date(2026, 3, 20, 12))
+        XCTAssertEqual(equinox.latitude, 0, accuracy: 0.5)
+        XCTAssertEqual(equinox.longitude, 1.9, accuracy: 1)
+        XCTAssertEqual(SolarTerminator.subsolarPoint(at: date(2026, 6, 21, 12)).latitude, 23.44, accuracy: 0.2)
+        XCTAssertEqual(SolarTerminator.subsolarPoint(at: date(2026, 12, 21, 12)).latitude, -23.44, accuracy: 0.2)
+        let warsaw = CLLocationCoordinate2D(latitude: 52.2, longitude: 21.0)
+        XCTAssertTrue(SolarTerminator.isNight(warsaw, at: date(2026, 11, 6, 22)), "Warszawa 22 UTC - noc")
+        XCTAssertFalse(SolarTerminator.isNight(warsaw, at: date(2026, 6, 21, 10)), "Warszawa 10 UTC w czerwcu - dzień")
+        XCTAssertEqual(SolarTerminator.terminator(at: date(2026, 11, 6, 12)).count, 181, "co 2° od -180 do 180")
     }
 
     // MARK: - HamQTH

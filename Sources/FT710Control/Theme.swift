@@ -15,15 +15,40 @@ enum Theme {
 }
 
 /// Panel z nagłówkiem w kolorze akcentu.
+/// Zwinięte ramki kolumn okna głównego (klucze stałe - tytuły zmieniają się z językiem); zapamiętywane.
+@MainActor
+final class PanelCollapse: ObservableObject {
+    static let shared = PanelCollapse()
+    @Published private(set) var collapsed: Set<String>
+
+    init() { collapsed = Set(UserDefaults.standard.stringArray(forKey: "layout.collapsedPanels") ?? []) }
+
+    func toggle(_ key: String) {
+        if collapsed.contains(key) { collapsed.remove(key) } else { collapsed.insert(key) }
+        UserDefaults.standard.set(collapsed.sorted(), forKey: "layout.collapsedPanels")
+    }
+}
+
 struct RigPanel<Content: View>: View {
     let title: String?
     var trailing: String? = nil
+    /// Klucz zwijania (kolumny okna głównego): kliknięcie tytułu zwija ramkę do jednego wiersza. nil - bez zwijania.
+    var collapseKey: String? = nil
     @ViewBuilder var content: Content
+    @ObservedObject private var collapse = PanelCollapse.shared
+
+    private var isCollapsed: Bool { collapseKey.map { collapse.collapsed.contains($0) } ?? false }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             if let title {
-                HStack {
+                HStack(spacing: 4) {
+                    if collapseKey != nil {
+                        Image(systemName: isCollapsed ? "chevron.right" : "chevron.down")
+                            .font(.system(size: 9, weight: .semibold))
+                            .foregroundStyle(Theme.dim)
+                            .frame(width: 10)
+                    }
                     Text(title)
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundStyle(Theme.header)
@@ -32,8 +57,11 @@ struct RigPanel<Content: View>: View {
                         Text(trailing).font(.system(size: 11, design: .monospaced)).foregroundStyle(Theme.dim)
                     }
                 }
+                .contentShape(Rectangle())
+                .onTapGesture { if let collapseKey { collapse.toggle(collapseKey) } }
+                .help(collapseKey != nil ? L("Kliknij, żeby zwinąć albo rozwinąć") : "")
             }
-            content
+            if !isCollapsed { content }
         }
         .padding(8)
         .frame(maxWidth: .infinity, alignment: .topLeading)

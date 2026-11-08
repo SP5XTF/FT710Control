@@ -7,7 +7,6 @@ import AppKit
 final class UpdateChecker: ObservableObject {
     static let shared = UpdateChecker()
     static let repository = "sp5xtf/FT710Control"
-    static var releasesPage: URL { URL(string: "https://github.com/\(repository)/releases")! }
 
     struct Release: Equatable {
         let version: String

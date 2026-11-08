@@ -2,13 +2,14 @@ import SwiftUI
 
 /// Częstotliwości startowe przycisków pasm w modułach CW, RTTY i SSTV (Region 1) i tryb radia dla każdej.
 enum ModeBandPlan {
-    case cw, rtty, sstv
+    case cw, rtty, sstv, psk
 
     var key: String {
         switch self {
         case .cw: return "cw"
         case .rtty: return "rtty"
         case .sstv: return "sstv"
+        case .psk: return "psk"
         }
     }
 
@@ -24,6 +25,10 @@ enum ModeBandPlan {
                     24_920_000, 28_085_000].map { $0 + 2_125 }
         case .sstv:
             return [3_733_000, 7_165_000, 14_230_000, 18_160_000, 21_340_000, 24_975_000, 28_680_000, 50_680_000]
+        case .psk:
+            // PSK31: częstotliwość wybierania w DATA-U, aktywność tuż powyżej (np. 14,070 + 0,5…2 kHz)
+            return [1_838_000, 3_580_000, 7_040_000, 10_142_000, 14_070_000, 18_100_000, 21_080_000,
+                    24_920_000, 28_120_000, 50_290_000]
         }
     }
 
@@ -33,6 +38,7 @@ enum ModeBandPlan {
         case .cw: return "3"
         case .rtty: return "8"
         case .sstv: return hz < 10_000_000 ? "8" : "C"
+        case .psk: return "C"
         }
     }
 
@@ -41,6 +47,7 @@ enum ModeBandPlan {
         case .cw: return "CW-U"
         case .rtty: return "DATA-L"
         case .sstv: return L("DATA-L / DATA-U")
+        case .psk: return "DATA-U"
         }
     }
 }

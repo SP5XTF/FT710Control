@@ -81,6 +81,7 @@ struct LogModePreset: Hashable, Identifiable {
         LogModePreset(label: "FT4", mode: "MFSK", submode: "FT4", defaultRST: ""),
         LogModePreset(label: "RTTY", mode: "RTTY", submode: nil, defaultRST: "599"),
         LogModePreset(label: "PSK31", mode: "PSK", submode: "PSK31", defaultRST: "599"),
+        LogModePreset(label: "PSK63", mode: "PSK", submode: "PSK63", defaultRST: "599"),
         LogModePreset(label: "JS8", mode: "MFSK", submode: "JS8", defaultRST: ""),
         LogModePreset(label: "AM", mode: "AM", submode: nil, defaultRST: "59"),
         LogModePreset(label: "FM", mode: "FM", submode: nil, defaultRST: "59"),
@@ -675,6 +676,11 @@ final class LogbookStore: ObservableObject {
         }
         addImported(newQSOs)
         newQSOs.forEach { onLogged?($0); announceLogged($0) }
+        // dane z QRZ/HamQTH (imię, QTH…) - WSJT-X ich nie przysyła; tylko puste pola, lokator z WSJT-X zostaje
+        if !newQSOs.isEmpty, AppServices.shared.qrz.canLookup {
+            let ids = Set(newQSOs.map(\.id))
+            Task { @MainActor [weak self] in _ = await self?.fillFromQRZ(ids: ids, qrz: AppServices.shared.qrz) }
+        }
         let result = (added: newQSOs.count, duplicates: analysis.duplicates.count)
         let calls = ADIF.parse(text).compactMap { $0["CALL"] }.joined(separator: ", ")
         if result.added > 0 {

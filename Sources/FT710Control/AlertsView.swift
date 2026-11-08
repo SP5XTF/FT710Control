@@ -134,6 +134,7 @@ struct AlertSettingsView: View {
                     }
                     Divider().padding(.vertical, 4)
                     Toggle(L("Dźwięk"), isOn: $center.soundEnabled).toggleStyle(.checkbox)
+                        .help(L("Dźwięk przy alercie (wybór dźwięku obok)"))
                     HStack {
                         Picker("", selection: $center.soundName) {
                             ForEach(AlertCenter.sounds, id: \.self) { Text($0).tag($0) }

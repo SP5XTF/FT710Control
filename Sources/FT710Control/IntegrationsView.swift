@@ -115,6 +115,7 @@ private struct ServiceDetail: View {
 
             HStack(spacing: 8) {
                 Button(L("Test")) { Task { await uploader.test(service) } }
+                    .help(L("Sprawdza połączenie i dane logowania do serwisu (bez wysyłania łączności)"))
                     .disabled(!service.hasTest || cfg.busy || !cfg.isConfigured)
                 Button(L("Wyślij zaległe ({1})", pendingCount)) { uploader.uploadPending(service) }
                     .disabled(!cfg.isConfigured || cfg.busy || pendingCount == 0)

@@ -69,6 +69,12 @@ def to_markdown(body):
 def main():
     target = sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, "build", "wiki")
     os.makedirs(target, exist_ok=True)
+    # strony usuniętych tematów nie mogą zostać w wiki - wszystkie strony są generowane, więc stare .md usuwamy
+    # (tylko w folderze wiki: pustym albo z Home.md)
+    existing = [f for f in os.listdir(target) if f.endswith(".md")]
+    if not existing or "Home.md" in existing:
+        for name in existing:
+            os.remove(os.path.join(target, name))
     topics = read_topics()
     ver = version()
     en_pages = [(t, slug(t["ten"])) for t in topics]

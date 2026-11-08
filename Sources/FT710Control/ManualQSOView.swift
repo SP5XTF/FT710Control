@@ -3,8 +3,18 @@ import SwiftUI
 /// Ręczne dodanie łączności (dziennik → „Dodaj QSO…”): np. z drugiego radia na 2 m, 70 cm, 23 cm - pasmo, data UTC,
 /// emisja, propagacja (przemiennik, satelita…), radio i moc. Pasmo z pełnej tabeli ADIF (makeQSO zna tylko pasma
 /// FT-710, więc łączność na 145,5 MHz dostałaby puste pasmo - nie liczyłaby się do VUCC ani statystyk).
+/// Wartości startowe okna „Dodaj QSO…” - z małego formularza dziennika na karcie głównej.
+struct ManualQSOPrefill {
+    var call = "", name = "", qth = "", grid = "", comment = "", rstSent = "", rstRcvd = ""
+    var start: Date?
+}
+
 struct ManualQSOView: View {
     @ObservedObject var store: LogbookStore
+    /// Dane wpisane już w małym formularzu (znak, imię…) - nil: puste okno (okno dziennika).
+    var prefill: ManualQSOPrefill? = nil
+    /// Po zapisie (np. wyczyszczenie małego formularza).
+    var onSaved: (() -> Void)? = nil
     @Environment(\.dismiss) private var dismiss
     @StateObject private var lookup = CallLookup()
 
@@ -130,6 +140,16 @@ struct ManualQSOView: View {
         .onAppear {
             lastMode = modeLabel
             if frequency.isEmpty { frequency = Self.defaultFrequency(band: band, mode: modeLabel) }
+            if let prefill, !prefill.call.isEmpty {
+                call = prefill.call.uppercased()
+                name = prefill.name; qth = prefill.qth; grid = prefill.grid; comment = prefill.comment
+                rstSent = prefill.rstSent; rstRcvd = prefill.rstRcvd
+                if let start = prefill.start { date = start }
+                // dane z QRZ do zapisu (strefy, kraj…) - pola wpisane w formularzu zostają
+                if QRZClient.baseCall(call).count >= 3, AppServices.shared.qrz.canLookup {
+                    lookup.request(call, using: AppServices.shared.qrz, debounce: false)
+                }
+            }
         }
         .onChange(of: lookup.record) { record in
             guard let record, record.call == QRZClient.baseCall(call) else { return }
@@ -178,6 +198,7 @@ struct ManualQSOView: View {
         let watts = power.replacingOccurrences(of: ",", with: ".").trimmingCharacters(in: .whitespaces)
         if let value = Double(watts), value > 0 { qso.extra["TX_PWR"] = watts }
         store.add(qso)
+        onSaved?()
         savedCount += 1
         message = L("Zapisano {1} ({2}, {3}) - razem w tym oknie: {4}", callsign, band, modeLabel, savedCount)
         if next {

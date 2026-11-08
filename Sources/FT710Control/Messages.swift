@@ -62,6 +62,7 @@ struct MessagePanel: View {
                 }
                 Button("STOP") { cat.stopMessage() }
                     .buttonStyle(RigButtonStyle(tint: Theme.tx, height: 22))
+                    .help(L("Przerywa odtwarzanie komunikatu z pamięci radia"))
                     .disabled(!cat.isConnected)
                 Text(hint)
                     .font(.system(size: 9))

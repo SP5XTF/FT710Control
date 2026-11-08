@@ -28,6 +28,7 @@ struct ContentView: View {
     /// Moduł CW w „uchwycie” bez publikowania - okno nie przerysowuje się przy każdym znaku.
     @StateObject private var cwHolder = CWHolder()
     @StateObject private var rttyHolder = RTTYHolder()
+    @StateObject private var pskHolder = PSKHolder()
     @StateObject private var ft8Holder = FT8Holder()
     /// Wpisywane QSO - poza widokiem zakładki, żeby przełączanie zakładek go nie kasowało.
     @StateObject private var quickLogDraft = QuickLogDraft()
@@ -59,6 +60,7 @@ struct ContentView: View {
         case cw = "CW"
         case rtty = "RTTY"
         case ft8 = "FT8/FT4"
+        case psk = "PSK"
         case pota = "POTA"
         case contest = "ZAWODY"
         case propagation = "PROPAGACJA"
@@ -67,7 +69,6 @@ struct ContentView: View {
         case spectrum = "WIDMO AUDIO"
         case catShare = "CAT SHARE"
         case remote = "ZDALNIE"
-        case catLog = "LOG CAT"
         var id: String { rawValue }
     }
 
@@ -76,22 +77,34 @@ struct ContentView: View {
         // Górna część zajmuje całą wysokość nad panelem zakładek. Skop w środku się rozciąga,
         // a boczne kolumny mają dokładnie tę samą wysokość (przy małym oknie przewijają się wewnątrz),
         // więc kończą się równo z dołem waterfalla. Panel zakładek jest na stałe tuż pod skopem.
-        VStack(spacing: 8) {
-            HStack(alignment: .top, spacing: 8) {
-                sideColumn { leftColumn }.frame(width: 214)
-                centerColumn
-                rightColumn.frame(width: 240)
+        GeometryReader { geometry in
+            VStack(spacing: 0) {
+                Color.clear.frame(height: 0)
+                    .onAppear { windowWidth = geometry.size.width }
+                    .onChange(of: geometry.size.width) { width in
+                        if abs(width - windowWidth) > 4 { windowWidth = width }
+                    }
+                HStack(alignment: .top, spacing: 8) {
+                    sideColumn { leftColumn }.frame(width: 214)
+                    centerColumn
+                    rightColumn.frame(width: 240)
+                }
+                .frame(maxHeight: .infinity)
+                PanelSplitter(height: $bottomHeight, collapsed: $bottomCollapsed, collapsedHeight: Self.collapsedBottomHeight)
+                // przy niskim oknie dolny panel oddaje miejsce górze (VFO, wskaźniki, skop - ok. 440 pt);
+                // zapamiętana wysokość wraca sama po powiększeniu okna
+                bottomPanel
+                    .frame(height: bottomCollapsed ? Self.collapsedBottomHeight
+                                                   : min(CGFloat(bottomHeight), max(180, geometry.size.height - 450)))
+                    .clipped()
             }
-            .frame(maxHeight: .infinity)
-            bottomPanel
-                .frame(height: Self.bottomPanelHeight)
         }
         .padding(8)
         .id(languageCode)
         .safeAreaInset(edge: .bottom, spacing: 0) { statusBar }
         .background(Theme.background)
         .preferredColorScheme(.dark)
-        .frame(minWidth: 1480, minHeight: 900)
+        .frame(minWidth: 1280, minHeight: 760)
         .onChange(of: txArmed) { armed in
             if !armed { releasePTT() }      // wyłączenie odblokowania zawsze kończy nadawanie
             audio.updateTXPath(armed: armed)
@@ -111,8 +124,11 @@ struct ContentView: View {
             ArrowKeyMonitor(active: digitSelection != nil && cat.isConnected) { code in handleArrow(code) }
         )
         .onChange(of: txArmed) { armed in
+            DiagnosticsHub.shared.txArmed = armed                // pomiar SWR (osobne okno) sprawdza zgodę
+            if !armed { SWRSweep.shared.stop() }
             if !armed { cwHolder.manager.shutdownTX() }          // klucz CW zwolniony niezależnie od zakładki
             if !armed, rttyHolder.manager.transmitting { rttyHolder.manager.stopTX() }
+            if !armed, pskHolder.manager.transmitting { pskHolder.manager.stopTX() }
             ft8Holder.manager.setTXArmed(armed)                 // cofnięcie zgody przerywa też FT8
         }
         // Spot POTA: numer parku do formularza dziennika (znak przychodzi przez logbook.prefill).
@@ -152,6 +168,7 @@ struct ContentView: View {
         .onChange(of: cat.isConnected) { connected in
             if !connected { cwHolder.manager.shutdownTX() }
             if !connected, rttyHolder.manager.transmitting { rttyHolder.manager.stopTX() }
+            if !connected, pskHolder.manager.transmitting { pskHolder.manager.stopTX() }
             if !connected { ft8Holder.manager.haltTX() }
         }
         .sheet(isPresented: $showDiagnostics) {
@@ -173,6 +190,11 @@ struct ContentView: View {
         }
         .onAppear {
             UpdateChecker.shared.startAutomatic()       // nowa wersja na GitHub - przy starcie i raz na dobę
+            // raport diagnostyczny (menu Pomoc) - stan radia, skopu, dźwięku, FT8, pracy zdalnej
+            let hub = DiagnosticsHub.shared
+            hub.cat = cat; hub.scope = rfScope; hub.audio = audio; hub.ft8 = ft8Holder.manager
+            hub.remote = remote; hub.catShare = shareBox.value
+            hub.txArmed = txArmed
             uploader.attach(logbook)                    // automatyczna wysyłka nowych QSO do serwisów
             cat.startAutoConnect()                      // zapamiętany port radia
             rfScope.startIfEnabled()                    // waterfall domyślnie włączony
@@ -180,6 +202,7 @@ struct ContentView: View {
             sstvHolder.manager.attach(audio: audio, cat: cat, callsign: { book.myCall })
             cwHolder.manager.attach(audio: audio, cat: cat, logbook: logbook)
             rttyHolder.manager.attach(audio: audio, cat: cat, logbook: logbook)
+            pskHolder.manager.attach(audio: audio, cat: cat, logbook: logbook)
             ft8Holder.manager.attach(audio: audio, cat: cat, logbook: logbook)
             ft8Holder.manager.setTXArmed(txArmed)
             potaHolder.manager.attach(cat: cat, logbook: logbook)
@@ -266,11 +289,20 @@ struct ContentView: View {
     }
 
     /// Wysokość panelu zakładek pod skopem.
-    private static let bottomPanelHeight: CGFloat = 360
+    /// Dolny panel: wysokość zmieniana uchwytem (zapamiętywana), zwijany do samego paska zakładek (dwuklik
+    /// na uchwycie, ⌥⌘B). Wcześniej stałe 360 pt - na laptopach (ok. 900 pt) lewa kolumna się nie mieściła.
+    @AppStorage("layout.bottomHeight") private var bottomHeight: Double = 360
+    @AppStorage("layout.bottomCollapsed") private var bottomCollapsed = false
+    /// Szerokość okna (zmienia się tylko przy zmianie rozmiaru) - układ kompaktowy dla ekranów laptopów
+    /// (MacBook Air: domyślnie 1470 pt; minimum okna 1280 pt).
+    @State private var windowWidth: CGFloat = 1600
+    private var compactVFO: Bool { windowWidth < 1500 }
+    private static let collapsedBottomHeight: CGFloat = 38
 
     /// Boczna kolumna: wysokość jak środek; nadmiar przewija się wewnątrz kolumny.
     private func sideColumn<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
-        ScrollView(.vertical, showsIndicators: false) {
+        // pasek przewijania widoczny, gdy zawartość się nie mieści - wcześniej ukryty, więc dolne ramki „znikały”
+        ScrollView(.vertical, showsIndicators: true) {
             content()
         }
         .frame(maxHeight: .infinity, alignment: .top)
@@ -362,7 +394,7 @@ struct ContentView: View {
 
     private var leftColumn: some View {
         VStack(spacing: 8) {
-            RigPanel(title: L("Pasmo")) {
+            RigPanel(title: L("Pasmo"), collapseKey: "left.band") {
                 ColumnGrid(Self.bandButtons, id: \.id, columns: 3) { item in
                     Button(item.label) { selectBand(item) }
                         .buttonStyle(RigButtonStyle(selected: Bands.name(for: cat.activeFreq) == item.band))
@@ -377,14 +409,14 @@ struct ContentView: View {
                 }
             }
 
-            RigPanel(title: L("Tryb")) {
+            RigPanel(title: L("Tryb"), collapseKey: "left.mode") {
                 ColumnGrid(Self.modeButtons, id: \.id, columns: 3) { mode in modeButton(mode) }
                 .disabled(!cat.isConnected)
             }
 
             filterPanel
 
-            RigPanel(title: "AGC") {
+            RigPanel(title: "AGC", collapseKey: "left.agc") {
                 HStack(spacing: 4) {
                     agcButton("FAST", 1)
                     agcButton("MID", 2)
@@ -394,7 +426,7 @@ struct ContentView: View {
             }
 
             // Szybki wybór redukcji szumu odsłuchu na Macu (pełne ustawienia: zakładka AUDIO)
-            RigPanel(title: L("NR Mac (odsłuch)")) {
+            RigPanel(title: L("NR Mac (odsłuch)"), collapseKey: "left.nrmac") {
                 HStack(spacing: 4) {
                     ForEach(AudioDenoiser.Level.allCases, id: \.self) { level in
                         Button(level == .off ? "OFF" : (level == .ai ? "AI" : (level == .dx ? "DX" : "\(level.rawValue)"))) { audio.nrLevel = level }
@@ -424,7 +456,7 @@ struct ContentView: View {
     private var filterPanel: some View {
         let mode = cat.modeCode
         let fixedWidth = FilterTables.kind(for: mode) == .wide
-        return RigPanel(title: L("RX DSP / Filtr")) {
+        return RigPanel(title: L("RX DSP / Filtr"), collapseKey: "left.dsp") {
             FilterGraph(modeCode: mode,
                         widthIndex: cat.value(.width),
                         shift: cat.value(.ifShift) ?? 0,
@@ -464,6 +496,49 @@ struct ContentView: View {
         }
     }
 
+    /// Podpowiedzi przycisków radia (najechanie myszą) - opis działania, nie tylko nazwa.
+    static func buttonHelp(_ label: String) -> String {
+        switch label {
+        case "FAST": return L("AGC szybkie – szybki powrót wzmocnienia; do CW i emisji cyfrowych")
+        case "MID": return L("AGC średnie")
+        case "SLOW": return L("AGC wolne – równy poziom głosu; do SSB i AM")
+        case "AUTO": return L("AGC automatyczne – szybkość dobiera radio według emisji")
+        case "NAR": return L("NAR – wąski filtr odbiornika")
+        case "NOTCH": return L("NOTCH – ręczny filtr wycinający jeden ton zakłócający (częstotliwość: suwak NOTCH)")
+        case "DNF": return L("DNF – cyfrowy filtr wycinający: sam usuwa stałe tony (nośne, gwizdy)")
+        case "CONTOUR": return L("CONTOUR – kształtuje pasmo audio: podbija albo tłumi wybrany wycinek (suwak CONTOUR)")
+        case "IPO": return L("IPO – bez przedwzmacniacza: najlepsza odporność na silne sygnały (niższe pasma)")
+        case "AMP1": return L("AMP1 – przedwzmacniacz o umiarkowanym wzmocnieniu")
+        case "AMP2": return L("AMP2 – przedwzmacniacz o największym wzmocnieniu (wyższe pasma, słabe sygnały)")
+        case "Off", "6dB", "12dB", "18dB":
+            return L("Tłumik wejściowy (ATT): {1} – przy bardzo silnych sygnałach i zakłóceniach", label)
+        case "ON": return L("Tuner antenowy radia włączony")
+        case "OFF": return L("Tuner antenowy radia wyłączony (obejście)")
+        default: return label
+        }
+    }
+
+    /// Podpowiedzi zakładek dolnego panelu.
+    static func tabHelp(_ tab: BottomTab) -> String {
+        switch tab {
+        case .log: return L("Formularz dziennika i ostatnie łączności")
+        case .dxCluster: return L("Spoty DX Cluster – kliknięcie stroi radio")
+        case .sstv: return L("Odbiór i nadawanie obrazów SSTV")
+        case .cw: return L("Dekoder i nadawanie CW, makra")
+        case .rtty: return L("Dekoder i nadawanie RTTY (AFSK), makra")
+        case .ft8: return L("FT8 i FT4 – dekodowanie, nadawanie, sekwencer, Hound")
+        case .psk: return L("PSK31 i PSK63 – dekoder, nadawanie, makra")
+        case .pota: return L("Aktywacje Parks on the Air")
+        case .contest: return L("Tryb zawodów – osobny log, punkty, duble")
+        case .propagation: return L("Prognozy i mapy propagacji")
+        case .display: return L("Wygląd skopu i waterfalla")
+        case .audio: return L("Urządzenia dźwiękowe, odsłuch, redukcja szumu, korektory")
+        case .spectrum: return L("Widmo i waterfall dźwięku z radia")
+        case .catShare: return L("Serwer CAT dla innych programów (WSJT-X, JS8Call…)")
+        case .remote: return L("Praca zdalna z przeglądarki (telefon, tablet, komputer)")
+        }
+    }
+
     private func agcButton(_ label: String, _ value: Int) -> some View {
         let current = cat.value(.agc) ?? -1
         // Radio zgłasza AUTO jako 4, 5 lub 6 (AUTO-FAST/MID/SLOW).
@@ -471,6 +546,7 @@ struct ContentView: View {
         return Button(label) { cat.set(.agc, value) }
             .buttonStyle(RigButtonStyle(selected: selected, fontSize: 11))
             .disabled(!cat.isAvailable(.agc))
+            .help(Self.buttonHelp(label))
     }
 
     private func toggleButton(_ label: String, _ control: RadioControl) -> some View {
@@ -478,6 +554,7 @@ struct ContentView: View {
         return Button(label) { cat.set(control, on ? 0 : 1) }
             .buttonStyle(RigButtonStyle(selected: on))
             .disabled(!cat.isAvailable(control))
+            .help(Self.buttonHelp(label))
     }
 
     private func controlSlider(_ title: String, _ control: RadioControl,
@@ -508,17 +585,62 @@ struct ContentView: View {
                           info: isMain ? vfoAInfo : vfoBInfo)
     }
 
+    /// Zakładki mieszczące się w szerokości okna (oszacowanie z długości nazw) i reszta do menu „Więcej”.
+    private var tabsThatFit: (visible: [BottomTab], hidden: [BottomTab]) {
+        // marginesy, dzwonek alertów, Diagnostyka USB, „Więcej” - z zapasem (szerokość czcionki jest szacowana)
+        let available = windowWidth - 16 - 360
+        var used: CGFloat = 0
+        var visible: [BottomTab] = [], hidden: [BottomTab] = []
+        for item in BottomTab.allCases {
+            let width = CGFloat(L(item.rawValue).count) * 8.2 + 36
+            if hidden.isEmpty, used + width <= available { visible.append(item); used += width } else { hidden.append(item) }
+        }
+        return (visible, hidden)
+    }
+
+    /// VFO-B w jednym wierszu (wąskie okno): częstotliwość, tryb, TX przy SPLIT. Pełny wyświetlacz - szersze okno.
+    private var compactVFOB: some View {
+        let vfo = cat.activeVFO == "A" ? "B" : "A"
+        let hz = vfo == "A" ? cat.freqA : cat.freqB
+        let mode = vfo == "A" ? cat.modeNameA : cat.modeNameB
+        return HStack(spacing: 8) {
+            Text(vfo == "A" ? "VFO-A" : "VFO-B")
+                .font(.system(size: 10, weight: .bold))
+                .foregroundStyle(Theme.header)
+                .padding(.horizontal, 5).padding(.vertical, 2)
+                .overlay(RoundedRectangle(cornerRadius: 3).stroke(Theme.header.opacity(0.6)))
+            Text(hz > 0 ? formatFrequency(hz) : "–")
+                .font(.system(size: 18, weight: .medium, design: .monospaced))
+                .foregroundStyle(Theme.dim)
+            Text(mode).font(.system(size: 11, weight: .semibold)).foregroundStyle(Theme.dim)
+            if splitOn {
+                Text("TX").font(.system(size: 11, weight: .bold)).foregroundStyle(cat.transmitting ? Theme.tx : Theme.accent)
+            }
+            Spacer()
+        }
+        .padding(.horizontal, 10).padding(.vertical, 5)
+        .background(Theme.panel, in: RoundedRectangle(cornerRadius: 8))
+        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.border))
+        .help(L("VFO-B w wersji kompaktowej (wąskie okno) - pełny wyświetlacz przy szerszym oknie; A/B zamienia VFO"))
+    }
+
     private var centerColumn: some View {
         VStack(spacing: 8) {
             HStack(alignment: .top, spacing: 8) {
                 VStack(spacing: 8) {
                     // VFO-A i VFO-B obok siebie (minimalna szerokość okna 1480 pt - mieszczą się zawsze).
                     // Bez ViewThatFits: przy każdej zmianie mierzył od nowa oba warianty układu (test wydajności).
-                    HStack(alignment: .top, spacing: 8) {
-                        vfoADisplay.frame(idealWidth: 360)
-                        vfoBDisplay.frame(idealWidth: 290)
+                    // szerokie okno: VFO-A i VFO-B obok siebie; węższe (laptop) - VFO-B jednym wierszem pod VFO-A
+                    if compactVFO {
+                        vfoADisplay
+                        compactVFOB
+                    } else {
+                        HStack(alignment: .top, spacing: 8) {
+                            vfoADisplay.frame(idealWidth: 360)
+                            vfoBDisplay.frame(idealWidth: 290)
+                        }
+                        .clipped()
                     }
-                    .clipped()
                     vfoControls
                 }
                 meters.frame(minWidth: 300, idealWidth: 400, maxWidth: 400)
@@ -777,6 +899,7 @@ struct ContentView: View {
         Button(label) { cat.set(control, value) }
             .buttonStyle(RigButtonStyle(selected: cat.value(control) == value, fontSize: 12))
             .disabled(!cat.isAvailable(control))
+            .help(Self.buttonHelp(label))
     }
 
     private var txPanel: some View {
@@ -806,6 +929,7 @@ struct ContentView: View {
                     .buttonStyle(RigButtonStyle(selected: cat.value(.tuner) == 0, fontSize: 12))
                     .frame(width: 48)
                     .disabled(!cat.isAvailable(.tuner))
+                    .help(Self.buttonHelp("OFF"))
             }
             // Strojenie tunera nadaje nośną - tylko przy odblokowanym nadawaniu.
             Button("TUNE") { cat.startTuning() }
@@ -843,12 +967,32 @@ struct ContentView: View {
     private var bottomPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 5) {
-                ForEach(BottomTab.allCases) { item in
-                    Button { tab = item } label: {
+                let split = tabsThatFit
+                ForEach(split.visible) { item in
+                    Button { tab = item; if bottomCollapsed { bottomCollapsed = false } } label: {
                         Text(L(item.rawValue)).padding(.horizontal, 6)
                     }
                     .buttonStyle(RigButtonStyle(selected: tab == item, height: 22, fontSize: 11))
                     .fixedSize()
+                    .help(Self.tabHelp(item))
+                }
+                if !split.hidden.isEmpty {
+                    // zakładki, które się nie mieszczą (wąskie okno) - wybrana pokazuje swoją nazwę na przycisku
+                    Menu {
+                        ForEach(split.hidden) { item in
+                            Button(L(item.rawValue)) { tab = item; if bottomCollapsed { bottomCollapsed = false } }
+                        }
+                    } label: {
+                        Text(split.hidden.contains(tab) ? L(tab.rawValue) + " ▾" : L("WIĘCEJ ▾"))
+                            .font(.system(size: 11, weight: .semibold))
+                    }
+                    .menuStyle(.borderlessButton)
+                    .fixedSize()
+                    .help(L("Zakładki, które nie mieszczą się w szerokości okna"))
+                    .padding(.horizontal, 6)
+                    .frame(height: 22)
+                    .background(split.hidden.contains(tab) ? Theme.accent.opacity(0.35) : Theme.panel,
+                                in: RoundedRectangle(cornerRadius: 5))
                 }
                 Spacer()
                 AlertBellButton()
@@ -857,7 +1001,12 @@ struct ContentView: View {
                 }
                 .buttonStyle(RigButtonStyle(height: 22, fontSize: 11))
                 .fixedSize()
+                .help(L("Diagnostyka połączenia USB z radiem: porty, skop FT4222, sterowniki"))
             }
+            // pasek zakładek nie może rozepchnąć panelu poza okno (szerokość zakładek jest tylko szacowana) -
+            // wcześniej przy zbyt szerokim pasku cała zawartość zakładek wychodziła za prawą krawędź (np. ZAWODY)
+            .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
+            .clipped()
             Divider()
             Group {
                 switch tab {
@@ -868,6 +1017,8 @@ struct ContentView: View {
                     CWView(cw: cwHolder.manager, audio: audio, cat: cat, txArmed: txArmed)
                 case .rtty:
                     RTTYView(rtty: rttyHolder.manager, audio: audio, cat: cat, txArmed: txArmed)
+                case .psk:
+                    PSKView(psk: pskHolder.manager, audio: audio, cat: cat, txArmed: txArmed)
                 case .ft8:
                     FT8View(ft8: ft8Holder.manager, audio: audio, cat: cat, txArmed: txArmed)
                 case .pota:
@@ -895,10 +1046,9 @@ struct ContentView: View {
                     }
                 case .catShare: scrollingTab { catShareSection }
                 case .remote: scrollingTab { RemoteSectionView(remote: remote) }
-                case .catLog: logSection
                 }
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity, alignment: .topLeading)
         }
         .padding(8)
         .background(Theme.panel, in: RoundedRectangle(cornerRadius: 8))
@@ -957,9 +1107,10 @@ struct ContentView: View {
                 ForEach(cat.ports, id: \.self) { Text($0).tag($0) }
             }
             .labelsHidden()
-            .frame(width: 260)
+            .frame(width: windowWidth < 1500 ? 190 : 260)
             .disabled(cat.isConnected)
             Button(L("Odśwież")) { cat.refreshPorts() }
+                .help(L("Odśwież listę portów szeregowych (np. po podłączeniu radia)"))
                 .disabled(cat.isConnected)
             Picker("", selection: $cat.baud) {
                 ForEach([4800, 9600, 19200, 38400, 115200], id: \.self) { Text(verbatim: "\($0)").tag($0) }
@@ -978,6 +1129,7 @@ struct ContentView: View {
                 }
             }
             .keyboardShortcut(.defaultAction)
+            .help(cat.isConnected ? L("Rozłącz radio (CAT)") : L("Połącz z radiem przez CAT - wybrany port i prędkość (↩)"))
             Toggle(L("Auto"), isOn: $cat.autoConnect)
                 .toggleStyle(.checkbox)
                 .help(L("Łącz automatycznie przy starcie z ostatnio działającym portem; gdy radio jest wyłączone - czekaj, aż się pojawi"))
@@ -995,7 +1147,8 @@ struct ContentView: View {
             ConnectionBadges(remote: remote, share: share)
             // liczniki i zegar zmieniają się co sekundę - w osobnym kontenerze o stałej szerokości
             IsolatedHost { LiveStatusText(scope: rfScope) }
-                .frame(width: 600, height: 16)
+                .frame(minWidth: 150, idealWidth: 600, maxWidth: 600)
+                .frame(height: 16)
             Button { openWindow(id: "help") } label: {
                 Image(systemName: "questionmark.circle")
             }
@@ -1154,9 +1307,6 @@ struct ContentView: View {
         }
     }
 
-    private var logSection: some View {
-        CATLogView(log: cat.logModel)
-    }
 }
 
 /// Zakładka LOG CAT: obserwuje tylko dziennik CAT (nie całe radio).
@@ -1506,5 +1656,102 @@ struct StatusAudioControl: View {
 
     private var volumeSymbol: String {
         audio.rxVolume < 0.01 ? "speaker.fill" : audio.rxVolume < 0.4 ? "speaker.wave.1.fill" : "speaker.wave.2.fill"
+    }
+}
+
+
+/// Menu Pomoc → „Dziennik CAT”: osobne okno z komunikacją z radiem (wcześniej zakładka LOG CAT).
+struct CATLogWindow: View {
+    var body: some View {
+        Group {
+            if let model = DiagnosticsHub.shared.cat?.logModel {
+                CATLogView(log: model)
+            } else {
+                Text(L("Dziennik CAT będzie dostępny po otwarciu okna głównego programu."))
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(12)
+        .frame(minWidth: 640, minHeight: 360)
+    }
+}
+
+
+/// Uchwyt między górną częścią okna a dolnym panelem: przeciąganie zmienia wysokość panelu (podgląd linią,
+/// zmiana po puszczeniu - bez przeliczania okna przy każdym ruchu myszy), dwuklik zwija i rozwija panel.
+struct PanelSplitter: View {
+    @Binding var height: Double
+    @Binding var collapsed: Bool
+    let collapsedHeight: CGFloat
+    @State private var dragOffset: CGFloat = 0
+    @State private var dragging = false
+
+    var body: some View {
+        ZStack {
+            Capsule().fill(dragging ? Theme.accent : Theme.border).frame(width: 64, height: 4)
+        }
+        .frame(maxWidth: .infinity)
+        .frame(height: 10)
+        .contentShape(Rectangle())
+        .overlay {
+            if dragging {
+                Rectangle().fill(Theme.accent.opacity(0.8)).frame(height: 2).offset(y: dragOffset)
+                    .allowsHitTesting(false)
+            }
+        }
+        .onHover { inside in
+            if inside { NSCursor.resizeUpDown.push() } else { NSCursor.pop() }
+        }
+        .gesture(
+            DragGesture(minimumDistance: 2)
+                .onChanged { value in
+                    dragging = true
+                    dragOffset = value.translation.height
+                }
+                .onEnded { value in
+                    let current = collapsed ? Double(collapsedHeight) : height
+                    let windowHeight = Double(NSApp.keyWindow?.contentView?.bounds.height ?? 900)
+                    let maximum = max(240, windowHeight - 380)             // góra okna zawsze z miejscem na VFO i skop
+                    let proposed = current - Double(value.translation.height)
+                    if proposed < 120 {
+                        collapsed = true                                    // przeciągnięty prawie do końca - zwiń
+                    } else {
+                        collapsed = false
+                        height = min(max(proposed, 180), maximum)
+                    }
+                    dragging = false
+                    dragOffset = 0
+                }
+        )
+        .onTapGesture(count: 2) { collapsed.toggle() }
+        .help(L("Przeciągnij, żeby zmienić wysokość dolnego panelu; dwuklik albo ⌥⌘B - zwiń / rozwiń"))
+    }
+}
+
+/// Menu Widok: zwinięcie i rozwinięcie dolnego panelu (⌥⌘B).
+struct LayoutCommands: Commands {
+    @AppStorage("layout.bottomCollapsed") private var bottomCollapsed = false
+
+    var body: some Commands {
+        CommandGroup(after: .toolbar) {
+            Button(bottomCollapsed ? L("Rozwiń dolny panel") : L("Zwiń dolny panel")) { bottomCollapsed.toggle() }
+                .keyboardShortcut("b", modifiers: [.command, .option])
+        }
+    }
+}
+
+
+/// Menu Okno: narzędzia w osobnych oknach (pomiar SWR anteny).
+struct ToolsCommands: Commands {
+    @Environment(\.openWindow) private var openWindow
+
+    var body: some Commands {
+        CommandGroup(after: .windowArrangement) {
+            Divider()
+            Button(L("Pomiar SWR anteny…")) { openWindow(id: "swr") }
+                .keyboardShortcut("s", modifiers: [.command, .option])
+            Button(L("Kto mnie słyszy…")) { openWindow(id: "heard") }
+                .keyboardShortcut("k", modifiers: [.command, .option])
+        }
     }
 }

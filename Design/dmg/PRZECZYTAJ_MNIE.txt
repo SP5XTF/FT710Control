@@ -97,29 +97,26 @@ e) WSJT-X / JTDX (opcjonalnie):
 
 6. CO NOWEGO W TEJ WERSJI - warto sprawdzić
 -------------------------------------------
-- Płynność: skop i waterfall bez szarpania także na pełnym ekranie (licznik „opóźnienie” na
-  pasku stanu powinien pokazywać kilkadziesiąt ms lub mniej).
-- Skop: palety Turbo (SDR) i Inferno, wypełnienie kolorami palety, peak hold, skala dB, znaczniki
-  czasu na waterfallu, pasek planu pasma (zakładka EKRAN).
-- Dziennik: filtry (pasmo, emisja, okres), sortowanie kolumn, Statystyki…, Mapa łączności (kula
-  3D), dyplomy IOTA/SOTA/WWFF/PGA, usuwanie łączności także w Club Log i QRZ, HamQTH.
-- Dziennik w zakładkach SSTV, CW i RTTY (kolumna po prawej).
-- FT8: wybór wołającego (najdalej / najsilniejszy…), limit wywołań, „po QSO następny wołający” -
-  przycisk „Opcje…” w panelu nadawania.
-- FT8 Hound: praca z DXpedycjami w trybie Fox/Hound (przełącznik „Hound” w panelu nadawania;
-  opis w Pomocy, temat FT8).
-- Zawody: osobny log z edycją, „Poprzednie zawody…”, duble na skopie, spot na DX Cluster.
-- Praca zdalna z przeglądarki: VFO, filtry, TX, tuner, komunikaty M1-M5, dziennik, CW, klaster,
-  alerty, FT8/FT4 (dotknięcie komunikatu = wołanie).
-- Praca zdalna przez internet bez Tailscale: tunel Cloudflare (zakładka ZDALNIE; na Macu
-  „brew install cloudflared”, na telefonie sama przeglądarka, kod QR z adresem).
-- Pasek stanu: głośność odsłuchu z wyciszeniem.
+- PSK31 i PSK63: nowa zakładka PSK (odbiór z AFC i blokadą szumu, nadawanie, makra, dziennik).
+- Menu Okno: pomiar SWR anteny w paśmie (krzywa SWR, porównanie pomiarów) i mapa „Kto mnie słyszy”
+  z PSKReporter, z nocą i linią dnia i nocy.
+- Układ dla MacBooka (okno od 1280 pt): zmienna wysokość i zwijanie dolnego panelu (⌥⌘B), zwijane
+  ramki lewej kolumny, VFO-B w jednym wierszu, menu WIĘCEJ dla zakładek; podpowiedzi przycisków radia.
+- Dziennik: „Dodaj ręcznie…” (formularz na karcie głównej) i „Dodaj QSO…” (okno dziennika) - np.
+  łączności z drugiego radia na 2 m, 70 cm, 23 cm, z propagacją (przemiennik, satelita…), radiem i mocą.
+- Dane z QRZ/HamQTH podążają za zmianą znaku (np. po niepełnym „SP5X”); łączności z WSJT-X/JTDX
+  uzupełniają się danymi z QRZ.
+- Menu Plik: kopia i przywracanie ustawień programu (bez haseł). Menu Pomoc: raport diagnostyczny
+  (jeden plik do zgłoszenia błędu) i okno „Dziennik CAT” (wcześniej zakładka LOG CAT).
+- Hasło pracy zdalnej w pęku kluczy macOS (przenosi się samo przy pierwszym uruchomieniu).
+- Wcześniej (0.9.x): układ komputerowy panelu zdalnego, wodospad FT8 w przeglądarce, FT8 Hound,
+  korektor nadawania, odzyskiwanie skopu i dźwięku po uśpieniu, NAR, DNR/NB/PROC jak w radiu.
 
 7. ZGŁASZANIE BŁĘDÓW
 --------------------
 Przyślij: wersję programu (@VERSION@), wersję macOS, model Maca, opis (co robiłeś, co się
-stało, czego się spodziewałeś) i zrzut ekranu. Przy problemach z radiem dołącz zawartość
-zakładki LOG CAT, a przy skopie - „Diagnostyka USB” i „Log” skopu.
+stało, czego się spodziewałeś) i zrzut ekranu. Najprościej: menu Pomoc -> Zapisz raport
+diagnostyczny… (jeden plik, bez haseł); przy problemach z radiem także okno Pomoc -> Dziennik CAT.
 Pomoc w programie: menu Pomoc (Cmd-?).
 Zgłoszenia i nowe wersje: https://github.com/sp5xtf/FT710Control (Issues, Releases).
 Program sam sprawdza nowe wersje (menu FT710Control -> Sprawdź aktualizacje…).

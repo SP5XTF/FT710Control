@@ -277,6 +277,7 @@ struct RFScopeView: View {
             HStack(spacing: 4) {
                 Toggle("Auto", isOn: $model.autoFloor).font(.caption)
                     .fixedSize()
+                    .help(L("Poziom tła (szumu) dobierany automatycznie - wyłącz, żeby ustawić suwakiem „Tło”"))
                 Text(L("Tło")).font(.caption)
                     .fixedSize()
                 Slider(value: $model.floorDB, in: -150 ... -20).frame(width: 80)

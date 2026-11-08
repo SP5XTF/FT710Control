@@ -17,7 +17,32 @@ import Combine
 final class RemoteStation: ObservableObject {
     @Published var enabled = false { didSet { if enabled != oldValue { enabled ? start() : stop() } } }
     @Published var port: Int { didSet { UserDefaults.standard.set(port, forKey: "remotePort") } }
-    @Published var password: String { didSet { UserDefaults.standard.set(password, forKey: "remotePassword") } }
+    /// Hasło pracy zdalnej - w pęku kluczy macOS, jak pozostałe hasła programu (wcześniej jawnym tekstem w ustawieniach).
+    @Published var password: String { didSet { if password != oldValue { Self.storePassword(password) } } }
+    static let keychainService = "FT710Control.remote"
+
+    private static func storePassword(_ value: String) {
+        if value.isEmpty {
+            Keychain.delete(service: keychainService, account: "password")
+        } else {
+            _ = Keychain.set(value, service: keychainService, account: "password")
+        }
+    }
+
+    /// Hasło z pęku kluczy; jednorazowa migracja z ustawień (wersje do 0.9.3) - usunięte z ustawień dopiero
+    /// po udanym zapisie w pęku kluczy, więc nawet przy zablokowanym pęku hasło nie przepadnie.
+    private static func loadPassword() -> String {
+        let defaults = UserDefaults.standard
+        if let legacy = defaults.string(forKey: "remotePassword") {
+            if legacy.isEmpty || Keychain.exists(service: keychainService, account: "password")
+                || Keychain.set(legacy, service: keychainService, account: "password") {
+                defaults.removeObject(forKey: "remotePassword")
+            } else {
+                return legacy                                   // pęk kluczy niedostępny - spróbujemy przy następnym starcie
+            }
+        }
+        return Keychain.get(service: keychainService, account: "password") ?? ""
+    }
     @Published var allowTX = UserDefaults.standard.bool(forKey: "remoteAllowTX") {
         didSet {
             UserDefaults.standard.set(allowTX, forKey: "remoteAllowTX")
@@ -95,7 +120,7 @@ final class RemoteStation: ObservableObject {
     init() {
         let savedPort = UserDefaults.standard.integer(forKey: "remotePort")
         port = (1024...65535).contains(savedPort) ? savedPort : 8710
-        password = UserDefaults.standard.string(forKey: "remotePassword") ?? ""
+        password = Self.loadPassword()
         lanAccess = UserDefaults.standard.bool(forKey: "remoteLAN")
 
         remoteAudio.onRXChunk = { [weak self] pcm in

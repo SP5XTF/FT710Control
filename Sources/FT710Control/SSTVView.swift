@@ -185,6 +185,7 @@ struct SSTVView: View {
                     .frame(width: 230)
                     HStack(spacing: 6) {
                         Button(L("Obraz…")) { sstv.chooseImage() }
+                            .help(L("Wybierz obraz z dysku do nadania"))
                         Button(L("Plansza testowa")) { sstv.useTestPattern() }
                     }
                     Toggle(L("Znak na obrazie"), isOn: $sstv.overlayCall)

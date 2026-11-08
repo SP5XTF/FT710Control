@@ -47,6 +47,7 @@ struct SpectrumView: View {
             HStack(spacing: 4) {
                 Toggle("Auto", isOn: $model.autoFloor).font(.caption)
                     .fixedSize()
+                    .help(L("Poziom tła (szumu) dobierany automatycznie - wyłącz, żeby ustawić suwakiem „Tło”"))
                 Text(L("Tło")).font(.caption)
                     .fixedSize()
                 Slider(value: $model.floorDB, in: -150 ... -20).frame(width: 90)
@@ -75,6 +76,7 @@ struct SpectrumView: View {
             Spacer(minLength: 8)
             Toggle(L("Pauza"), isOn: $model.paused)
                 .fixedSize()
+                .help(L("Zatrzymuje przesuwanie widma i waterfalla (do obejrzenia sygnału)"))
             Button(L("Wyczyść")) { model.clear() }
                 .fixedSize()
         }

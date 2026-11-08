@@ -21,18 +21,22 @@ Polish version below – [wersja polska](#po-polsku).
   plan strip, 3D view.
 - **FT8/FT4**: decoding and transmitting, auto-sequencing, caller choice (strongest / farthest…), call
   limit, **Fox/Hound (DXpedition) mode** including combined Fox messages, PSKReporter.
-- **Logbook**: filters and sorting, statistics, 3D QSO map, QRZ.com / **HamQTH** lookups, uploads to LoTW,
+- **Logbook**: filters and sorting, statistics, 3D QSO map, **manual QSO entry** (e.g. a second radio on 2 m / 70 cm /
+  23 cm, with propagation mode and satellite), QRZ.com / **HamQTH** lookups, uploads to LoTW,
   eQSL, QRZ Logbook, Club Log, HRDLog, Cloudlog, confirmation downloads, ADIF import/export, iCloud backup.
 - **Awards**: DXCC, WAZ, WPX, VUCC, POTA, IOTA, SOTA, WWFF, PGA.
 - **DX Cluster, POTA spots, alerts** (someone calling you, new DXCC…), propagation maps.
 - **Contests** with a separate log, scoring, dupes on the scope and Cabrillo export (CQ WW, CQ WPX, SP DX
   and others).
-- **CW, RTTY and SSTV** decoders and transmitters, each with a logging panel.
+- **CW, RTTY, SSTV and PSK31/PSK63** decoders and transmitters, each with a logging panel.
+- **Antenna SWR sweep** across a band (low-power carriers, SWR curve, saved and compared measurements) and a
+  **"Who hears me" map** from PSKReporter with the night side and the day/night line (grayline).
 - **Audio**: noise reduction (incl. AI), ANF, NB, APF, 8-band receive equalizer, **12-band transmit
   equalizer** for the Mac microphone.
 - **Remote operation from a browser** (iPhone, iPad, any computer): audio both ways, PTT, scope, VFO,
   filters, CW, **FT8**, log, cluster – over **Tailscale** or a **Cloudflare tunnel** (no app on the phone).
-- **CAT Share** (rigctld) for WSJT-X, JTDX and other programs. Polish and English interface.
+- **CAT Share** (rigctld) for WSJT-X, JTDX, JS8Call and other programs. **Settings backup/restore** and a
+  one-click **diagnostic report**. Polish and English interface.
 
 ## Requirements
 
@@ -71,8 +75,8 @@ Developer notes (in Polish): [DEVELOPMENT.md](DEVELOPMENT.md).
 ## Reporting bugs
 
 Open an [Issue](https://github.com/sp5xtf/FT710Control/issues) with the program version, macOS version, Mac
-model, what you did, what happened and a screenshot. For radio problems add the contents of the **CAT LOG**
-tab; for the scope – **USB diagnostics** and the scope **Log**. If the program quits, attach the crash
+model, what you did, what happened and a screenshot. For radio problems add the contents of the **Help → CAT log**
+window; for the scope – **USB diagnostics** and the scope **Log**. Easiest: **Help → Save diagnostic report…** – one file with all of this, without passwords. If the program quits, attach the crash
 report (**Console → Crash Reports → FT710Control-….ips**).
 
 ## License
@@ -91,7 +95,7 @@ affiliated with Yaesu.
 
 **FT-710 Control** – program stacyjny dla Yaesu FT-710 na macOS: sterowanie radiem, skop RF i waterfall,
 FT8/FT4 (z trybem Fox/Hound), dziennik z potwierdzeniami QSL i dyplomami, DX Cluster, POTA, zawody,
-CW/RTTY/SSTV oraz praca zdalna z przeglądarki iPhone'a lub iPada (Tailscale albo tunel Cloudflare).
+CW/RTTY/SSTV/PSK31, pomiar SWR anteny, mapa „kto mnie słyszy” oraz praca zdalna z przeglądarki iPhone'a lub iPada (Tailscale albo tunel Cloudflare).
 Interfejs po polsku i angielsku.
 
 **Wersja beta** – nadawanie najpierw na sztuczne obciążenie i z małą mocą; błędy proszę zgłaszać w

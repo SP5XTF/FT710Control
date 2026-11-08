@@ -30,6 +30,7 @@ struct QuickLogView: View {
     let openLogbook: () -> Void
 
     @FocusState private var callFocused: Bool
+    @State private var showManualQSO = false
 
     var body: some View {
         GroupBox(L("Dziennik łączności")) {
@@ -58,6 +59,16 @@ struct QuickLogView: View {
                     Button(L("Zapisz QSO")) { save() }
                         .disabled(draft.call.isEmpty)
                     Button(L("Wyczyść")) { clear() }
+                    Button(L("Dodaj ręcznie…")) { showManualQSO = true }
+                        .help(L("Łączność z innego radia albo z inną datą (np. 2 m, 70 cm, 23 cm): pasmo, data UTC, emisja, propagacja, radio i moc - z tym, co już wpisano w formularzu"))
+                        .sheet(isPresented: $showManualQSO) {
+                            ManualQSOView(store: store,
+                                          prefill: ManualQSOPrefill(call: draft.call, name: draft.name, qth: draft.qth,
+                                                                    grid: draft.grid, comment: draft.comment,
+                                                                    rstSent: draft.rstSent, rstRcvd: draft.rstRcvd,
+                                                                    start: draft.startedAt),
+                                          onSaved: { clear() })
+                        }
                     Text(infoLine)
                         .font(.caption.monospacedDigit())
                         .foregroundStyle(.secondary)
@@ -238,6 +249,7 @@ final class QuickLogDraft: ObservableObject {
 
     /// Pusty formularz: tryb i RST wg radia.
     func reset(preset: LogModePreset) {
+        autoFill = QRZAutoFill()
         call = ""
         name = ""
         qth = ""

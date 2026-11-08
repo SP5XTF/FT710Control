@@ -70,6 +70,9 @@ struct HelpCommands: Commands {
         CommandGroup(replacing: .help) {
             Button(L("Pomoc FT-710 Control")) { openWindow(id: "help") }
                 .keyboardShortcut("?", modifiers: .command)
+            Divider()
+            Button(L("Dziennik CAT")) { openWindow(id: "catlog") }
+                .keyboardShortcut("l", modifiers: [.command, .option])
         }
     }
 }
@@ -95,6 +98,12 @@ Polski / English wybierasz w pasku stanu. Zmiana działa od razu, bez rozłącza
 • Główne okno – panel radia i zakładki narzędzi.
 • Dziennik łączności – pełna lista QSO, import/eksport ADIF, ustawienia stacji i QRZ.
 • Pomoc – to okno (⌘?).
+
+**Układ okna – mniejsze ekrany**
+• **Wysokość dolnego panelu** (zakładki) zmieniasz, przeciągając uchwyt nad paskiem zakładek – wysokość jest zapamiętywana. **Dwuklik na uchwycie** albo **⌥⌘B** (menu Widok) zwija panel do samego paska zakładek; kliknięcie zakładki rozwija go z powrotem.
+• **Ramki lewej kolumny** (Pasmo, Tryb, RX DSP / Filtr, AGC, NR Mac) zwijasz kliknięciem tytułu – rzadko używane nie zabierają miejsca; stan jest zapamiętywany.
+• Gdy kolumna się nie mieści, widać pasek przewijania. Przy niskim oknie dolny panel sam oddaje miejsce górze (VFO, wskaźniki, skop).
+• **Wąskie okno** (od 1280 pt – mieści się na MacBooku Air bez zewnętrznego monitora): VFO-B pokazuje się jednym wierszem pod VFO-A (częstotliwość, tryb, TX przy SPLIT), a zakładki, które się nie mieszczą, są w menu **WIĘCEJ ▾** na końcu paska (wybrana pokazuje tam swoją nazwę).
 """,
                   bodyEN: """
 **Connecting to the radio**
@@ -114,6 +123,12 @@ Polski / English is selected in the status bar. The change is immediate and does
 • Main window – radio panel and tool tabs.
 • Logbook – full QSO list, ADIF import/export, station and QRZ settings.
 • Help – this window (⌘?).
+
+**Window layout – smaller screens**
+• Change the **height of the bottom panel** (tabs) by dragging the handle above the tab bar – the height is remembered. **Double-click the handle** or **⌥⌘B** (View menu) collapses the panel to the tab bar alone; clicking a tab expands it again.
+• Collapse the **left column boxes** (Band, Mode, RX DSP / Filter, AGC, NR Mac) by clicking their title – rarely used ones take no space; the state is remembered.
+• When a column does not fit, a scroll bar is shown. In a low window the bottom panel gives room to the top by itself (VFO, meters, scope).
+• **Narrow window** (from 1280 pt – fits a MacBook Air without an external monitor): VFO-B is shown as one row under VFO-A (frequency, mode, TX with SPLIT), and tabs that do not fit are in the **MORE ▾** menu at the end of the bar (the selected one shows its name there).
 """),
 
         HelpTopic(id: "profile", icon: "person.crop.circle", titlePL: "Profil stacji", titleEN: "Station profile",
@@ -209,7 +224,7 @@ The **Station profile** window opens on first launch, and later from the **FT710
 • **DNR, NB, PROC** – jak w radiu: **przycisk** włącza i wyłącza, **suwak** obok (odpowiednik pokrętła) zmienia poziom zapamiętany w radiu – także przy wyłączonej funkcji (suwak przygaszony); ponowne włączenie wraca do tego poziomu.
 • **MIC, AMC** – poziom mikrofonu i automatycznej kontroli mocy.
 
-Ustawienia są odczytywane z radia po połączeniu i co ok. 3 s, więc zmiany gałkami na radiu też są widoczne. Kontrolka wyszarzona = radio nie odpowiedziało na jej komendę (lista w zakładce LOG CAT).
+Ustawienia są odczytywane z radia po połączeniu i co ok. 3 s, więc zmiany gałkami na radiu też są widoczne. Kontrolka wyszarzona = radio nie odpowiedziało na jej komendę (lista w oknie **Pomoc → Dziennik CAT**, ⌥⌘L).
 • **NAR** – wąski filtr radia (przycisk w ramce „RX DSP / Filtr”, obok NOTCH, DNF i CONTOUR; także w panelu zdalnym, sekcja Filtr). Szerokość RX BW zmienia się wtedy na zakres wąski radia. **DNR** – cyfrowa redukcja szumu radia (prawa kolumna: włączenie i poziom 1–15; w panelu zdalnym – sekcja Odbiór).
 """,
                   bodyEN: """
@@ -226,7 +241,7 @@ Ustawienia są odczytywane z radia po połączeniu i co ok. 3 s, więc zmiany ga
 • **DNR, NB, PROC** – as on the radio: the **button** turns it on and off, the **slider** next to it (the knob equivalent) changes the level remembered in the radio – also while the function is off (slider dimmed); turning it back on returns to that level.
 • **MIC, AMC** – microphone gain and automatic power control.
 
-Settings are read from the radio after connecting and about every 3 s, so changes made with the radio's knobs show up too. A greyed-out control = the radio did not answer its command (listed in the CAT LOG tab).
+Settings are read from the radio after connecting and about every 3 s, so changes made with the radio's knobs show up too. A greyed-out control = the radio did not answer its command (listed in the **Help → CAT log** window, ⌥⌘L).
 • **NAR** – the radio's narrow filter (button in the “RX DSP / Filter” box, next to NOTCH, DNF and CONTOUR; also in the remote panel, Filter section). RX BW then switches to the radio's narrow range. **DNR** – the radio's digital noise reduction (right column: on/off and level 1–15; in the remote panel – Receive section).
 """),
 
@@ -384,12 +399,12 @@ The **DISPLAY** tab changes how the RF scope looks. Changes appear on the scope 
 • **Statystyki…** – podsumowanie (łączności, różne stacje, kraje DXCC, dni z łącznościami, najlepszy dzień) i wykresy: łączności w latach, pasma, emisje, kontynenty, godziny UTC; wybór okresu.
 • **Referencje dyplomów** w oknie edycji QSO: gmina (CNTY), IOTA, SOTA, WWFF, POTA – standardowe pola ADIF.
 • **Import i eksport ADIF** (ADIF 3.1.4, z polami COUNTRY, DXCC, CQZ, ITUZ, DISTANCE).
-• **Odbieraj QSO z WSJT-X / JTDX** – w WSJT-X: Settings → Reporting → UDP Server `127.0.0.1`, port `2237`.
+• **Odbieraj QSO z WSJT-X / JTDX** – w WSJT-X: Settings → Reporting → UDP Server `127.0.0.1`, port `2237`. Łączność uzupełnia się zaraz po dodaniu danymi z QRZ/HamQTH (imię, QTH… – tylko puste pola; lokator z WSJT-X zostaje).
 
 Dane: `~/Library/Application Support/FT710Control/logbook.json` (kopia przy każdym uruchomieniu).
 • **Dane z QRZ przy wpisywaniu znaku** (formularz dziennika, „Dodaj QSO…”, SSTV/CW/RTTY, panel zdalny): imię, QTH i lokator wpisują się same. Po zmianie znaku (niepełny „SP5X”, poprawka ostatniej litery) dane poprzedniego znaku znikają, a wchodzą dane nowego – pola poprawione ręcznie zostają bez zmian.
 
-**Ręczne dodanie QSO** (okno dziennika → **Dodaj QSO…**)
+**Ręczne dodanie QSO** (formularz dziennika na karcie głównej → **Dodaj ręcznie…**, z tym, co już wpisano w formularzu; albo okno dziennika → **Dodaj QSO…**)
 • Np. łączności z drugiego radia na **2 m, 70 cm, 23 cm** (albo HF): znak z QRZ/HamQTH, **data i godzina UTC**, **pasmo** (160 m … 3 cm) z podpowiedzią typowej częstotliwości dla emisji (do zmiany; częstotliwość musi leżeć w paśmie), **emisja** (także MSK144 i Q65), RST, imię, QTH, **lokator** (z nim łączność liczy się do VUCC), uwagi.
 • **Propagacja** (ADIF PROP_MODE): przemiennik, satelita (z nazwą, np. QO-100 – wymagane przez LoTW), tropo, sporadyczne E, meteor scatter, EME, zorza, F2. **Moje radio** i **moc** (MY_RIG, TX_PWR) – zapamiętywane, więc dla drugiego radia wpisujesz je raz.
 • **Zapisz i następne** – zapisuje i czyści znak, a data, pasmo, emisja i radio zostają (wygodne przy dopisywaniu serii łączności). Zapis jak w dzienniku programu: kraj, strefy, odległość, wysyłka do serwisów.
@@ -439,12 +454,12 @@ Dane: `~/Library/Application Support/FT710Control/logbook.json` (kopia przy każ
 • **Statistics…** – a summary (QSOs, unique stations, DXCC entities, days with QSOs, best day) and charts: QSOs by year, bands, modes, continents, UTC hours; period selection.
 • **Award references** in the QSO edit window: gmina (CNTY), IOTA, SOTA, WWFF, POTA – standard ADIF fields.
 • **ADIF import and export** (ADIF 3.1.4, with COUNTRY, DXCC, CQZ, ITUZ, DISTANCE).
-• **Receive QSOs from WSJT-X / JTDX** – in WSJT-X: Settings → Reporting → UDP Server `127.0.0.1`, port `2237`.
+• **Receive QSOs from WSJT-X / JTDX** – in WSJT-X: Settings → Reporting → UDP Server `127.0.0.1`, port `2237`. Right after it is added the QSO is completed with QRZ/HamQTH data (name, QTH… – empty fields only; the locator from WSJT-X stays).
 
 Data: `~/Library/Application Support/FT710Control/logbook.json` (backed up at every start).
 • **QRZ data while typing a call** (log form, “Add QSO…”, SSTV/CW/RTTY, remote panel): name, QTH and locator fill in themselves. After the call changes (an incomplete “SP5X”, correcting the last letter) the previous call's data is removed and the new call's data comes in – fields you corrected by hand stay unchanged.
 
-**Adding a QSO manually** (log window → **Add QSO…**)
+**Adding a QSO manually** (the log form on the main tab → **Add manually…**, with what is already entered in the form; or the log window → **Add QSO…**)
 • E.g. QSOs from a second radio on **2 m, 70 cm, 23 cm** (or HF): call with QRZ/HamQTH, **UTC date and time**, **band** (160 m … 3 cm) with a suggested typical frequency for the mode (editable; the frequency must lie in the band), **mode** (also MSK144 and Q65), RST, name, QTH, **locator** (with it the QSO counts for VUCC), comment.
 • **Propagation** (ADIF PROP_MODE): repeater, satellite (with its name, e.g. QO-100 – required by LoTW), tropo, sporadic E, meteor scatter, EME, aurora, F2. **My radio** and **power** (MY_RIG, TX_PWR) – remembered, so for the second radio you enter them once.
 • **Save and next** – saves and clears the call, while date, band, mode and radio stay (handy for logging a series of QSOs). Saved as in the program's log: entity, zones, distance, upload to services.
@@ -916,6 +931,68 @@ How it is determined:
 • Do not call ordinary stations in Hound mode – untick Hound after working the DXpedition.
 """),
 
+        HelpTopic(id: "psk", icon: "dot.radiowaves.left.and.right", titlePL: "PSK31 i PSK63", titleEN: "PSK31 and PSK63",
+                  bodyPL: """
+**Odbiór**
+• Zakładka **PSK**: radio w **DATA-U** (przycisk **Ustaw radio: DATA-U**), odsłuch włączony (dekoder korzysta z dźwięku z radia).
+• **Przyciski pasm** – częstotliwości wybierania PSK31 (np. 14,070, 7,040, 3,580 MHz); aktywność jest w pasie kilku kHz powyżej. Prawy przycisk – powrót do domyślnej.
+• **Kliknij w widmo** na sygnał stacji (cienka linia o szerokości kilkudziesięciu Hz). **AFC** dostraja się dokładnie (łapie kilkadziesiąt Hz od kliknięcia).
+• **PSK31 / PSK63** – prędkość (31,25 i 62,5 Bd); PSK63 dwa razy szybsze, nieco mniej odporne.
+• **Jakość** – zgodność fazy sygnału (zielony pasek). **Blokada szumu** (domyślnie 50%; otwiera się, gdy jakość utrzymuje się przez pół sekundy – znaki z tej chwili nie giną): poniżej progu tekst nie jest wypisywany – sam szum daje do ok. 30%, więc ekran nie zapełnia się przypadkowymi znakami. Przy bardzo słabych sygnałach obniż próg.
+
+**Nadawanie**
+• Makra (**{CALL}** = Twój znak; ołówek – edycja) i pole tekstu; nadajesz na częstotliwości odbioru (tam, gdzie stoi czerwona kreska), więc stacja po drugiej stronie trafi w Ciebie.
+• Wymaga **Odblokuj TX**, połączenia z radiem i urządzenia „Do radia (TX)” w zakładce AUDIO. Nadany tekst pojawia się w oknie odbioru ze znakiem ».
+• PSK potrzebuje **czystego sygnału**: poziom tak, żeby ALC się nie ruszało, i umiarkowana moc – przesterowanie poszerza sygnał i przeszkadza sąsiadom.
+
+**Dziennik** (kolumna po prawej)
+• Jak w RTTY i CW: znak z QRZ/HamQTH, RST (puste – 599), zapis w trybie PSK (podtryb PSK31 albo PSK63 – zgodnie z wybraną prędkością).
+""",
+                  bodyEN: """
+**Receive**
+• The **PSK** tab: radio in **DATA-U** (the **Set radio: DATA-U** button), monitoring on (the decoder uses audio from the radio).
+• **Band buttons** – PSK31 dial frequencies (e.g. 14.070, 7.040, 3.580 MHz); activity is within a few kHz above. Right click – back to the default.
+• **Click the station's signal in the spectrum** (a thin line a few tens of Hz wide). **AFC** tunes precisely (it catches a few tens of Hz from the click).
+• **PSK31 / PSK63** – the speed (31.25 and 62.5 Bd); PSK63 is twice as fast and slightly less robust.
+• **Quality** – the phase consistency of the signal (green bar). **Squelch** (50% by default; it opens when the quality holds for half a second – characters from that moment are not lost): below the threshold no text is printed – noise alone gives up to about 30%, so the screen does not fill with random characters. Lower the threshold for very weak signals.
+
+**Transmit**
+• Macros (**{CALL}** = your call; pencil – edit) and a text field; you transmit on the receive frequency (where the red line is), so the other station finds you.
+• Requires **Enable TX**, a radio connection and the “To radio (TX)” device in the AUDIO tab. The sent text appears in the receive window marked ».
+• PSK needs a **clean signal**: set the level so that ALC does not move, and moderate power – overdriving widens the signal and disturbs neighbours.
+
+**Log** (column on the right)
+• As in RTTY and CW: call with QRZ/HamQTH, RST (empty – 599), logged as PSK mode (submode PSK31 or PSK63 – according to the chosen speed).
+"""),
+        HelpTopic(id: "tools", icon: "wrench.and.screwdriver", titlePL: "Narzędzia: pomiar SWR i kto mnie słyszy", titleEN: "Tools: SWR sweep and who hears me",
+                  bodyPL: """
+**Pomiar SWR anteny** (menu **Okno → Pomiar SWR anteny…**, ⌥⌘S)
+• Program przechodzi po paśmie (5–51 punktów) i na każdej częstotliwości nadaje krótką nośną (ton 1500 Hz w DATA-U przez dźwięk USB, ok. 0,5 s) na małej mocy (5–10 W), odczytuje SWR z radia i rysuje **krzywą SWR** z zaznaczonym minimum oraz liniami 1,5 i 2,0. Najechanie myszą na wykres pokazuje częstotliwość i SWR najbliższego punktu.
+• Wymaga **Odblokuj TX**, połączenia z radiem, urządzenia „Do radia (TX)” i źródła modulacji DATA = USB w menu radia. Przed pomiarem pojawia się potwierdzenie – posłuchaj, czy częstotliwości są wolne.
+• **Bezpieczeństwo:** tylko pasma amatorskie; przerwanie przy SWR > 5, przy braku mocy wyjściowej, przyciskiem STOP, po rozłączeniu radia albo cofnięciu „Odblokuj TX”. Częstotliwość zmienia się tylko na odbiorze. **Tuner wyłączony** (domyślnie) – mierzysz samą antenę. Po pomiarze wracają częstotliwość, tryb, moc i stan tunera.
+• **Test nośnej (3 s)** – jedna nośna na środku pasma z odczytem mocy i SWR na żywo: sprawdzenie przed pomiarem. Gdy moc jest zerowa, komunikat mówi, czy radio w ogóle nadawało i jaki był odczyt – zwykle winne jest źródło modulacji DATA w menu radia (ma być USB/REAR) albo za cichy ton: suwak **Poziom tonu** (jak „Poziom TX” w FT8) i głośność urządzenia „Do radia (TX)” w macOS.
+• Pomiary zapisują się (lista po prawej); prawy przycisk: **porównanie** z wybranym (szara linia – np. przed i po regulacji anteny), **CSV**, usunięcie.
+
+**Kto mnie słyszy** (menu **Okno → Kto mnie słyszy…**, ⌥⌘K)
+• Mapa stacji, które odebrały Twój sygnał (FT8, FT4, PSK, JS8…) według **PSKReporter.info** – kolor punktu i linii = pasmo, czerwony punkt = Twoja stacja (lokator z Profilu stacji).
+• **Noc i linia dnia i nocy:** ciemna strona mapy to noc, pomarańczowa linia – terminator (grayline), wzdłuż którego na niższych pasmach często otwierają się trasy DX; odświeżane co minutę.
+• **Okres** (15 min, 1 h, 6 h, 24 h) i **pasmo** – przełączanie natychmiast (pobierane jest ostatnie 24 h). Podsumowanie: liczba odbiorców, najdalszy, po nocnej stronie, liczba na pasmach; lista odbiorców od najdalszego (najechanie – lokator, emisja, czas).
+• PSKReporter prosi o odpytywanie najwyżej co 5 minut – program tego pilnuje (opcja **co 5 min** odświeża sama). Raporty pojawiają się, gdy odbiorcy wysyłają je do PSKReporter (np. WSJT-X), zwykle z kilkuminutowym opóźnieniem.
+""",
+                  bodyEN: """
+**Antenna SWR sweep** (menu **Window → Antenna SWR measurement…**, ⌥⌘S)
+• The program steps through the band (5–51 points) and on each frequency sends a short carrier (a 1500 Hz tone in DATA-U over USB audio, about 0.5 s) at low power (5–10 W), reads the SWR from the radio and draws an **SWR curve** with the minimum marked and lines at 1.5 and 2.0. Hovering over the chart shows the frequency and SWR of the nearest point.
+• Requires **Enable TX**, a radio connection, the “To radio (TX)” device and DATA modulation source = USB in the radio menu. A confirmation appears first – listen whether the frequencies are clear.
+• **Safety:** amateur bands only; stops at SWR > 5, when there is no output power, with the STOP button, when the radio disconnects or “Enable TX” is withdrawn. The frequency changes only while receiving. **Tuner off** (default) – you measure the antenna itself. Afterwards the frequency, mode, power and tuner state return.
+• **Carrier test (3 s)** – one carrier in the middle of the band with live power and SWR readings: a check before measuring. When the power is zero, the message says whether the radio transmitted at all and what the reading was – usually the DATA modulation source in the radio menu (it must be USB/REAR) or a too quiet tone is to blame: the **Tone level** slider (like “TX level” in FT8) and the volume of the “To radio (TX)” device in macOS.
+• Measurements are saved (list on the right); right click: **compare** with the selected one (grey line – e.g. before and after adjusting the antenna), **CSV**, delete.
+
+**Who hears me** (menu **Window → Who hears me…**, ⌥⌘K)
+• A map of stations that received your signal (FT8, FT4, PSK, JS8…) according to **PSKReporter.info** – point and line colour = band, red point = your station (locator from the Station profile).
+• **Night and the day/night line:** the dark side of the map is night, the orange line – the terminator (grayline), along which DX paths often open on the lower bands; refreshed every minute.
+• **Period** (15 min, 1 h, 6 h, 24 h) and **band** – switching is immediate (the last 24 h is fetched). Summary: number of receivers, the farthest, on the night side, counts per band; the receiver list from the farthest (hover – locator, mode, time).
+• PSKReporter asks for queries at most every 5 minutes – the program keeps to this (the **every 5 min** option refreshes by itself). Reports appear when receivers send them to PSKReporter (e.g. WSJT-X), usually with a few minutes' delay.
+"""),
         HelpTopic(id: "pota", icon: "leaf", titlePL: "POTA – Parki w eterze", titleEN: "POTA – Parks on the Air",
                   bodyPL: """
 Zakładka **POTA**: spoty aktywatorów z parków (Parks on the Air), statystyki użytkownika i polowanie na parki jednym kliknięciem.
@@ -1160,7 +1237,7 @@ Sterowanie radiem z przeglądarki (iPhone, iPad, dowolny komputer).
 • Podpowiedzi i test dźwięku – zwinięte pod „Pomoc i test dźwięku”.
 
 **Przez Tailscale (z nadawaniem)**
-1. Zakładka **ZDALNIE**: ustaw hasło (min. 8 znaków) i włącz serwer. Stan przełączników (serwer, nadawanie zdalne, sieć domowa) jest zapamiętywany – po ponownym uruchomieniu serwer włącza się sam; jeśli zostawisz „Pozwól na nadawanie zdalne”, operator z hasłem może nadawać od razu po starcie programu.
+1. Zakładka **ZDALNIE**: ustaw hasło (min. 8 znaków; przechowywane w pęku kluczy macOS, jak pozostałe hasła programu) i włącz serwer. Stan przełączników (serwer, nadawanie zdalne, sieć domowa) jest zapamiętywany – po ponownym uruchomieniu serwer włącza się sam; jeśli zostawisz „Pozwól na nadawanie zdalne”, operator z hasłem może nadawać od razu po starcie programu.
 2. Jednorazowo w Terminalu: `tailscale serve --bg 8710`. Jeśli Terminal odpowiada „command not found: tailscale”, aplikacja Tailscale nie dodała polecenia do ścieżki – użyj pełnej ścieżki: `/Applications/Tailscale.app/Contents/MacOS/Tailscale serve --bg 8710`, albo (wersja Standalone) zainstaluj polecenie w ustawieniach aplikacji Tailscale (integracja z wierszem poleceń), albo dodaj do `~/.zshrc` alias: `alias tailscale="/Applications/Tailscale.app/Contents/MacOS/Tailscale"`.
 3. Na telefonie z Tailscale otwórz `https://<nazwa-maca>.<tailnet>.ts.net`, podaj hasło, dotknij „Włącz audio”.
 4. Nadawanie wymaga na stacji zaznaczenia **Pozwól na nadawanie zdalne**.
@@ -1198,7 +1275,7 @@ Control the radio from a browser (iPhone, iPad, any computer).
 • Hints and the sound test – collapsed under “Help and sound test”.
 
 **Via Tailscale (with transmit)**
-1. **REMOTE** tab: set a password (min. 8 characters) and turn the server on. The switch states (server, remote transmit, home network) are remembered – after restarting the program the server turns on by itself; if you leave “Allow remote transmit” on, an operator with the password can transmit right after the program starts.
+1. **REMOTE** tab: set a password (min. 8 characters; stored in the macOS Keychain, like the program's other passwords) and turn the server on. The switch states (server, remote transmit, home network) are remembered – after restarting the program the server turns on by itself; if you leave “Allow remote transmit” on, an operator with the password can transmit right after the program starts.
 2. Once in Terminal: `tailscale serve --bg 8710`. If Terminal answers “command not found: tailscale”, the Tailscale app did not add the command to the path – use the full path: `/Applications/Tailscale.app/Contents/MacOS/Tailscale serve --bg 8710`, or (Standalone version) install the command in the Tailscale app settings (command-line integration), or add an alias to `~/.zshrc`: `alias tailscale="/Applications/Tailscale.app/Contents/MacOS/Tailscale"`.
 3. On a phone with Tailscale open `https://<mac-name>.<tailnet>.ts.net`, enter the password, tap “Włącz audio” (the browser page is currently in Polish only).
 4. Transmit requires **Allow remote transmit** at the station.
@@ -1221,12 +1298,12 @@ iPhone: if you hear nothing, check the volume; the page also tries to play in si
         HelpTopic(id: "diag", icon: "stethoscope", titlePL: "Diagnostyka", titleEN: "Diagnostics",
                   bodyPL: """
 • **Diagnostyka USB** (przycisk przy zakładkach) – co macOS widzi po stronie radia: mostek CAT (Silicon Labs), mostek skopu FT4222, kodek audio. „Zapamiętaj stan” + odłączenie kabla pokazuje, które urządzenia należą do radia. „Kopiuj raport” – do zgłoszenia problemu.
-• **LOG CAT** – komunikacja z radiem; tu pojawia się lista komend, na które radio nie odpowiedziało (wyszarzone kontrolki), i odrzucone komendy („?”).
+• **Dziennik CAT** (menu **Pomoc → Dziennik CAT**, ⌥⌘L – osobne okno) – komunikacja z radiem; tu pojawia się lista komend, na które radio nie odpowiedziało (wyszarzone kontrolki), i odrzucone komendy („?”).
 • **Pasek stanu** – liczniki płynności: ile razy na sekundę odświeża się okno, panel skopu, linia widma i waterfall, ile ramek przychodzi z radia oraz opóźnienie głównego wątku. Płynnie: „trace” i „wf” równe „frames”, opóźnienie poniżej ok. 30 ms.
 """,
                   bodyEN: """
 • **USB diagnostics** (button next to the tabs) – what macOS sees of the radio: CAT bridge (Silicon Labs), FT4222 scope bridge, audio codec. “Save state” + unplugging the cable shows which devices belong to the radio. “Copy report” – for problem reports.
-• **CAT LOG** – communication with the radio; this lists commands the radio did not answer (greyed-out controls) and rejected commands (“?”).
+• **CAT log** (menu **Help → CAT log**, ⌥⌘L – a separate window) – communication with the radio; this lists commands the radio did not answer (greyed-out controls) and rejected commands (“?”).
 • **Status bar** – smoothness counters: how many times per second the window, scope panel, spectrum line and waterfall refresh, how many frames arrive from the radio, and the main-thread delay. Smooth: “trace” and “wf” equal “frames”, delay below about 30 ms.
 """),
 
@@ -1260,7 +1337,7 @@ iPhone: if you hear nothing, check the volume; the page also tries to play in si
 
 **macOS pyta o hasło do pęku kluczy (QRZ)** – kliknij „Zawsze pozwalaj”. Po każdej nowej kompilacji programu macOS pyta ponownie (traktuje ją jak nowy program).
 
-**Kontrolka wyszarzona** – radio nie odpowiedziało na jej komendę; szczegóły w LOG CAT.
+**Kontrolka wyszarzona** – radio nie odpowiedziało na jej komendę; szczegóły w oknie Pomoc → Dziennik CAT.
 
 **Brak dźwięku z radia** – zgoda na mikrofon dla programu (Ustawienia systemowe → Prywatność i ochrona → Mikrofon), właściwe urządzenie „Z radia (RX)”.
 
@@ -1273,6 +1350,9 @@ iPhone: if you hear nothing, check the volume; the page also tries to play in si
 **Dekoder CW pisze śmieci** – sprawdź SNR (pasek w zakładce CW) i wskaż stację kliknięciem w widmo; przy kilku stacjach blisko siebie zawęź filtr radia (RX BW).
 
 **Odzyskanie dziennika** – w oknie dziennika kliknij **Przywróć z kopii…** i wybierz kopię. Ręcznie: kopie są w `~/Library/Application Support/FT710Control/` (`logbook-kopia.json`, `logbook-przed-….json`) – zamknij program, zmień nazwę wybranej kopii na `logbook.json` i uruchom program ponownie. Gdy dysk Maca uległ awarii: kopie dnia są w iCloud Drive (folder **FT-710 Control/Kopie dziennika**) – na nowym komputerze przywróć je przez **Przywróć z kopii…**, a plik `dziennik-najnowszy.adi` zaimportujesz do dowolnego programu.
+
+**Raport diagnostyczny** (menu **Pomoc → Zapisz raport diagnostyczny…**)
+• Jeden plik tekstowy do dołączenia do zgłoszenia błędu na GitHubie (Issues): wersja programu, macOS, model Maca, stan połączenia z radiem, ostatnie wpisy dziennika CAT i skopu, urządzenia dźwiękowe, stan FT8, pracy zdalnej i CAT Share oraz ustawienia – **bez haseł**. Zapisz go zaraz po wystąpieniu problemu, przed zamknięciem programu.
 """,
                   bodyEN: """
 **“No response” after connecting** – choose the other port of the pair, check CAT RATE = 38400 on the radio and the speed in the status bar.
@@ -1281,7 +1361,7 @@ iPhone: if you hear nothing, check the volume; the page also tries to play in si
 
 **macOS asks for the Keychain password (QRZ)** – click “Always Allow”. After every new build macOS asks again (it treats it as a new program).
 
-**Greyed-out control** – the radio did not answer its command; details in CAT LOG.
+**Greyed-out control** – the radio did not answer its command; details in the Help → CAT log window.
 
 **No audio from the radio** – microphone permission for the program (System Settings → Privacy & Security → Microphone), the correct “From radio (RX)” device.
 
@@ -1294,6 +1374,9 @@ iPhone: if you hear nothing, check the volume; the page also tries to play in si
 **The CW decoder prints garbage** – check the SNR (bar in the CW tab) and pick the station by clicking the spectrum; with several stations close together, narrow the radio filter (RX BW).
 
 **Restoring the logbook** – in the logbook window click **Restore from backup…** and choose a backup. Manually: backups are in `~/Library/Application Support/FT710Control/` (`logbook-kopia.json`, `logbook-przed-….json`) – quit the program, rename the chosen backup to `logbook.json` and start the program again. If the Mac's disk failed: daily backups are in iCloud Drive (folder **FT-710 Control/Kopie dziennika**) – on a new computer restore them with **Restore from backup…**, and `dziennik-najnowszy.adi` can be imported into any program.
+
+**Diagnostic report** (menu **Help → Save diagnostic report…**)
+• One text file to attach to a bug report on GitHub (Issues): program version, macOS, Mac model, the radio connection state, the latest CAT and scope log entries, audio devices, the FT8, remote operation and CAT Share state, and the settings – **without passwords**. Save it right after the problem occurs, before quitting the program.
 """),
 
         HelpTopic(id: "about", icon: "info.circle", titlePL: "O programie", titleEN: "About",
@@ -1310,6 +1393,11 @@ Mapy: Apple MapKit. Dane stacji: QRZ.com (interfejs XML, wymaga konta).
 • Program jest w publicznej wersji beta: https://github.com/sp5xtf/FT710Control – tam nowe wersje (Releases) i zgłaszanie błędów (Issues).
 • **Aktualizacje:** program sprawdza nowe wersje na GitHub przy starcie i raz na dobę; gdy jest nowsza, na pasku stanu pojawia się pomarańczowy przycisk „Nowa wersja …”. Ręcznie: menu FT710Control → **Sprawdź aktualizacje…**.
 • **Licencja:** GNU GPL v3.0 – program wolny i otwarty; składniki zewnętrzne i ich licencje – plik THIRD_PARTY_NOTICES.md.
+
+**Kopia ustawień programu** (menu **Plik**)
+• **Zapisz ustawienia programu…** – wszystkie ustawienia (profil stacji, porty, skop i ekran, FT8, makra, alerty, serwisy, praca zdalna, korektory…) do pliku `.ft710settings`. **Bez haseł** (QRZ, HamQTH, Club Log, LoTW, praca zdalna – po przywróceniu wpisz je ponownie) i **bez dziennika łączności** (ma własne kopie).
+• **Przywróć ustawienia programu…** – wczytuje plik (pokazuje datę i wersję kopii), po potwierdzeniu zastępuje ustawienia i uruchamia program ponownie. Bieżące ustawienia zapisują się wcześniej automatycznie w ~/Library/Application Support/FT710Control/Settings backups – przywrócenie da się cofnąć.
+• Przydatne przy przenosinach na nowego Maca i po ponownej instalacji.
 """,
                   bodyEN: """
 **FT-710 Control** – Yaesu FT-710 control for macOS.
@@ -1324,6 +1412,11 @@ Maps: Apple MapKit. Station data: QRZ.com (XML interface, account required).
 • The program is in public beta: https://github.com/sp5xtf/FT710Control – new versions (Releases) and bug reports (Issues).
 • **Updates:** the program checks GitHub for new versions at start-up and once a day; when there is a newer one, an orange “New version …” button appears in the status bar. Manually: menu FT710Control → **Check for updates…**.
 • **Licence:** GNU GPL v3.0 – free and open software; third-party components and their licences – the THIRD_PARTY_NOTICES.md file.
+
+**Program settings backup** (menu **File**)
+• **Save program settings…** – all settings (station profile, ports, scope and display, FT8, macros, alerts, services, remote operation, equalizers…) to an `.ft710settings` file. **Without passwords** (QRZ, HamQTH, Club Log, LoTW, remote operation – enter them again after restoring) and **without the logbook** (it has its own backups).
+• **Restore program settings…** – reads the file (shows the backup's date and version), after confirmation replaces the settings and restarts the program. The current settings are saved automatically beforehand in ~/Library/Application Support/FT710Control/Settings backups – a restore can be undone.
+• Useful when moving to a new Mac and after reinstalling.
 """)
     ]
 }

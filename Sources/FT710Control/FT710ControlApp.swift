@@ -72,6 +72,9 @@ struct FT710ControlApp: App {
         .commands {
             HelpCommands()                             // menu Pomoc: „Pomoc FT-710 Control” (⌘?)
             UpdateCommands()                           // menu programu: „Sprawdź aktualizacje…”
+            SettingsCommands()                         // Plik: kopia ustawień; Pomoc: raport diagnostyczny
+            LayoutCommands()                           // Widok: zwiń / rozwiń dolny panel (⌥⌘B)
+            ToolsCommands()                            // Okno: pomiar SWR anteny (⌥⌘S)
             ProfileCommands()                          // menu aplikacji: „Profil stacji…” (⇧⌘,)
         }
 
@@ -85,6 +88,21 @@ struct FT710ControlApp: App {
         Window(L("Pomoc FT-710 Control"), id: "help") {
             HelpView()
         }
+
+        Window(L("Kto mnie słyszy"), id: "heard") {
+            HeardMeView()
+        }
+        .defaultSize(width: 1200, height: 720)
+
+        Window(L("Pomiar SWR anteny"), id: "swr") {
+            SWRSweepView()
+        }
+        .defaultSize(width: 1000, height: 600)
+
+        Window(L("Dziennik CAT"), id: "catlog") {
+            CATLogWindow()
+        }
+        .defaultSize(width: 760, height: 520)
 
         Window(L("Profil stacji"), id: "profile") {
             StationProfileView()

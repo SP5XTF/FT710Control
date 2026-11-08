@@ -96,29 +96,26 @@ e) WSJT-X / JTDX (optional):
 
 6. WHAT'S NEW IN THIS VERSION - worth checking
 ----------------------------------------------
-- Smoothness: scope and waterfall without stutter, also full screen (the "lag" counter in the
-  status bar should show a few tens of ms or less).
-- Scope: Turbo (SDR) and Inferno palettes, palette-coloured fill, peak hold, dB scale, time
-  stamps on the waterfall, a band plan strip (DISPLAY tab).
-- Log: filters (band, mode, period), column sorting, Statistics…, QSO map (3D globe), IOTA/SOTA/
-  WWFF/PGA awards, deleting QSOs also in Club Log and QRZ, HamQTH.
-- A log in the SSTV, CW and RTTY tabs (column on the right).
-- FT8: caller choice (farthest / strongest…), call limit, "next caller after a QSO" - the
-  "Options…" button in the transmit panel.
-- FT8 Hound: working DXpeditions in Fox/Hound mode (the "Hound" switch in the transmit panel;
-  described in Help, FT8 topic).
-- Contests: a separate log with editing, "Previous contests…", dupes on the scope, DX Cluster spot.
-- Remote operation from a browser: VFO, filters, TX, tuner, memory messages M1-M5, log, CW,
-  cluster, alerts, FT8/FT4 (tap a message = call).
-- Remote operation over the internet without Tailscale: Cloudflare tunnel (REMOTE tab; on the Mac
-  "brew install cloudflared", on the phone just a browser, a QR code with the address).
-- Status bar: listening volume with mute.
+- PSK31 and PSK63: a new PSK tab (receive with AFC and squelch, transmit, macros, log).
+- Window menu: antenna SWR sweep across a band (SWR curve, comparing measurements) and a "Who hears
+  me" map from PSKReporter, with the night side and the day/night line.
+- Layout for a MacBook (window from 1280 pt): adjustable and collapsible bottom panel (Opt-Cmd-B),
+  collapsible left column boxes, VFO-B in one row, a MORE menu for tabs; tooltips on radio buttons.
+- Log: "Add manually…" (form on the main tab) and "Add QSO…" (log window) - e.g. QSOs from a second
+  radio on 2 m, 70 cm, 23 cm, with propagation (repeater, satellite…), radio and power.
+- QRZ/HamQTH data follows call changes (e.g. after an incomplete "SP5X"); QSOs from WSJT-X/JTDX are
+  completed with QRZ data.
+- File menu: program settings backup and restore (no passwords). Help menu: diagnostic report (one
+  file for a bug report) and the "CAT log" window (formerly the CAT LOG tab).
+- The remote password is in the macOS Keychain (moved automatically on first launch).
+- Earlier (0.9.x): desktop layout of the remote panel, FT8 waterfall in the browser, FT8 Hound,
+  transmit equalizer, scope and audio recovery after sleep, NAR, DNR/NB/PROC as on the radio.
 
 7. REPORTING BUGS
 -----------------
 Send: the program version (@VERSION@), macOS version, Mac model, a description (what you did,
-what happened, what you expected) and a screenshot. For radio problems include the LOG CAT tab
-contents; for the scope - "USB diagnostics" and the scope "Log".
+what happened, what you expected) and a screenshot. Easiest: menu Help -> Save diagnostic
+report… (one file, no passwords); for radio problems also the Help -> CAT log window.
 In-app help: Help menu (Cmd-?).
 Bug reports and new versions: https://github.com/sp5xtf/FT710Control (Issues, Releases).
 The program checks for new versions itself (menu FT710Control -> Check for updates…).

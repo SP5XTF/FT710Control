@@ -112,6 +112,7 @@ struct CWView: View {
                 Spacer()
                 Button(L("Auto")) { cw.setPitch(nil) }
                     .controlSize(.small)
+                    .help(L("Ton dekodera wykrywany automatycznie (zamiast ustawionego ręcznie)"))
                     .disabled(cw.manualPitch == nil)
             }
             snrBar
