@@ -211,18 +211,25 @@ struct HeardMeMap: NSViewRepresentable {
         let minute = Int(now.timeIntervalSince1970 / 60)
         if minute != c.drawnMinute {
             c.drawnMinute = minute
-            map.removeOverlays(map.overlays.filter { $0 is NightPolygon || $0 is TerminatorLine })
+            map.removeOverlays(map.overlays.filter {
+                let tag = ($0 as? MKShape)?.title
+                return tag == Self.nightTag || tag == Self.terminatorTag
+            })
             let night = SolarTerminator.nightPolygon(at: now)
-            map.addOverlay(NightPolygon(coordinates: night, count: night.count), level: .aboveRoads)
+            let polygon = MKPolygon(coordinates: night, count: night.count)
+            polygon.title = Self.nightTag
+            map.addOverlay(polygon, level: .aboveRoads)
             let line = SolarTerminator.terminator(at: now)
-            map.addOverlay(TerminatorLine(coordinates: line, count: line.count), level: .aboveRoads)
+            let terminator = MKPolyline(coordinates: line, count: line.count)
+            terminator.title = Self.terminatorTag
+            map.addOverlay(terminator, level: .aboveRoads)
         }
         // odbiorcy - tylko po zmianie listy
         let signature = reports.map { $0.id + "\($0.time.timeIntervalSince1970)" }.joined(separator: ",") + "\(home?.latitude ?? 0)"
         guard signature != c.drawnSignature else { return }
         c.drawnSignature = signature
         map.removeAnnotations(map.annotations)
-        map.removeOverlays(map.overlays.filter { $0 is PathLine })
+        map.removeOverlays(map.overlays.filter { $0 is MKGeodesicPolyline })
         if let home {
             let annotation = ReceiverAnnotation(coordinate: home, color: .white, title: L("Twoja stacja"), subtitle: nil)
             annotation.isHome = true
@@ -235,8 +242,8 @@ struct HeardMeMap: NSViewRepresentable {
             map.addAnnotation(ReceiverAnnotation(coordinate: coordinate, color: color, title: report.receiver,
                                                  subtitle: "\(report.band) \(report.mode)\(snr)"))
             if let home, reports.count <= 300 {
-                let path = PathLine(coordinates: [home, coordinate], count: 2)
-                path.color = color
+                let path = MKGeodesicPolyline(coordinates: [home, coordinate], count: 2)
+                path.title = report.band                                  // kolor pasma wybierany przy rysowaniu
                 map.addOverlay(path, level: .aboveRoads)
             }
         }
@@ -244,9 +251,11 @@ struct HeardMeMap: NSViewRepresentable {
 
     func makeCoordinator() -> Coordinator { Coordinator() }
 
-    final class NightPolygon: MKPolygon {}
-    final class TerminatorLine: MKPolyline {}
-    final class PathLine: MKGeodesicPolyline { var color: NSColor = .white }
+    // Nakładki to zwykłe obiekty MapKit, rozróżniane polem title (noc, terminator, pasmo linii). Własne podklasy
+    // z polami Swift (PathLine z polem color) tworzone inicjalizatorem Objective-C miały niezainicjalizowane pole -
+    // przypisanie koloru zwalniało przypadkowy wskaźnik (awaria 0.9.4 w updateNSView po kilkudziesięciu minutach).
+    static let nightTag = "ft710.night"
+    static let terminatorTag = "ft710.terminator"
 
     final class ReceiverAnnotation: NSObject, MKAnnotation {
         let coordinate: CLLocationCoordinate2D
@@ -264,21 +273,21 @@ struct HeardMeMap: NSViewRepresentable {
         var drawnSignature = ""
 
         func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
-            if let night = overlay as? NightPolygon {
+            if let night = overlay as? MKPolygon, night.title == HeardMeMap.nightTag {
                 let renderer = MKPolygonRenderer(polygon: night)
                 renderer.fillColor = NSColor.black.withAlphaComponent(0.38)
                 return renderer
             }
-            if let line = overlay as? TerminatorLine {
+            if let path = overlay as? MKGeodesicPolyline {               // przed MKPolyline (podklasa)
+                let renderer = MKPolylineRenderer(polyline: path)
+                renderer.strokeColor = NSColor(PropagationView.bandColor(path.title ?? "")).withAlphaComponent(0.45)
+                renderer.lineWidth = 1
+                return renderer
+            }
+            if let line = overlay as? MKPolyline, line.title == HeardMeMap.terminatorTag {
                 let renderer = MKPolylineRenderer(polyline: line)
                 renderer.strokeColor = NSColor.systemOrange.withAlphaComponent(0.9)
                 renderer.lineWidth = 2
-                return renderer
-            }
-            if let path = overlay as? PathLine {
-                let renderer = MKPolylineRenderer(polyline: path)
-                renderer.strokeColor = path.color.withAlphaComponent(0.45)
-                renderer.lineWidth = 1
                 return renderer
             }
             return MKOverlayRenderer(overlay: overlay)
