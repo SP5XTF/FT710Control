@@ -29,6 +29,9 @@ Polish version below – [wersja polska](#po-polsku).
 - **Contests** with a separate log, scoring, dupes on the scope and Cabrillo export (CQ WW, CQ WPX, SP DX
   and others).
 - **CW, RTTY, SSTV and PSK31/PSK63** decoders and transmitters, each with a logging panel.
+- **Listening filter** on the Mac: steep band-pass (SSB, CW 500/200/100 Hz, data) with draggable edges and
+  manual notches, shown on the audio spectrum and on the RF scope.
+- **Configuration window** (⌘,): every setting in one place, with a description of each section.
 - **Antenna SWR sweep** across a band (low-power carriers, SWR curve, saved and compared measurements) and a
   **"Who hears me" map** from PSKReporter with the night side and the day/night line (grayline).
 - **Audio**: noise reduction (incl. AI), ANF, NB, APF, 8-band receive equalizer, **12-band transmit
@@ -42,7 +45,9 @@ Polish version below – [wersja polska](#po-polsku).
 
 - A Mac with **macOS 13 Ventura or later** (Apple Silicon; an Intel build can be made from source).
 - A **Yaesu FT-710** connected with a USB cable. The CAT port driver is built into macOS.
-- Optional: FTDI FT4222 libraries for the RF scope, TQSL for LoTW uploads, `cloudflared` for the
+- The RF scope needs nothing extra: the FTDI libraries (D2XX, LibFT4222) are built into the app in the .dmg
+  (building from source: install them in `/usr/local/lib` – `build_app.sh` copies them into the app).
+- Optional: TQSL for LoTW uploads, `cloudflared` for the
   Cloudflare tunnel (`brew install cloudflared`). Details are in the in-app help (**Help → FT-710 Control
   Help**, ⌘?).
 
@@ -84,6 +89,11 @@ report (**Console → Crash Reports → FT710Control-….ips**).
 FT-710 Control is free software under the **GNU General Public License v3.0** – see [LICENSE](LICENSE).
 Third-party components and their licences: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
+**Additional permission (GPL-3 section 7):** the FT-710 Control licensors grant permission to convey the
+program combined with the FTDI D2XX and LibFT4222 libraries (covered by the FTDI licence; used only with
+genuine FTDI parts – the FT4222 in the FT-710). The .dmg includes these libraries; the source repository
+does not. Full text: `THIRD_PARTY_NOTICES.md`.
+
 Yaesu and FT-710 are trademarks of Yaesu Musen Co., Ltd. FT-710 Control is an independent program, not
 affiliated with Yaesu.
 
@@ -107,4 +117,4 @@ w macOS 15 – Ustawienia systemowe → Prywatność i ochrona → „Otwórz mi
 → Otwórz → Otwórz; albo w Terminalu `xattr -dr com.apple.quarantine /Applications/FT710Control.app`.
 Pełna pomoc w programie: menu Pomoc (⌘?), a także w [Wiki](https://github.com/sp5xtf/FT710Control/wiki).
 
-Licencja: GNU GPL v3.0.
+Licencja: GNU GPL v3.0, z dodatkowym zezwoleniem na łączenie z bibliotekami FTDI (D2XX, LibFT4222) wbudowanymi w program z obrazu .dmg – szczegóły w `THIRD_PARTY_NOTICES.md`.

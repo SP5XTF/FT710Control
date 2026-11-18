@@ -111,8 +111,6 @@ struct ModeBandButtons: View {
             ModeBandMemory.remember(plan, hz: current)
         }
         let target = ModeBandMemory.frequency(plan, band: band, fallback: fallback)
-        cat.setActiveFrequency(target)
-        let code = plan.modeCode(for: target)
-        if cat.modeCode != code { cat.setMode(code) }
+        cat.tune(hz: target, mode: plan.modeCode(for: target))
     }
 }

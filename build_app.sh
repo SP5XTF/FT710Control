@@ -84,6 +84,43 @@ cat > "${APP}/Contents/Info.plist" <<PLIST
 </plist>
 PLIST
 
+# Biblioteki FTDI (skop RF przez układ FT4222 w FT-710) wbudowane w aplikację - użytkownik nie instaluje
+# niczego sam. Źródło: biblioteki zainstalowane na tym Macu (domyślnie /usr/local/lib; inny katalog:
+# FTDI_LIB_DIR=...). Licencja FTDI: tylko do użytku z oryginalnymi układami FTDI (FT-710 ma FT4222) -
+# informacja o licencji trafia do DMG (Licencje.txt). Bez bibliotek na tym Macu aplikacja powstaje bez nich.
+FTDI_DIR="${FTDI_LIB_DIR:-/usr/local/lib}"
+FW="${APP}/Contents/Frameworks"
+newest() { ls "${FTDI_DIR}"/"$1".*dylib 2>/dev/null | sort -V | tail -1; }
+FT4222_SRC=$(newest libft4222)
+FTD2XX_SRC=$(newest libftd2xx)
+# warunek zgody FTDI: pełny tekst licencji razem z bibliotekami - bez niego biblioteki NIE są dołączane
+FTDI_LICENCE="Design/FTDI/FTDI-Driver-Licence.txt"
+if [[ ! -s "${FTDI_LICENCE}" ]]; then
+    echo "UWAGA: brak ${FTDI_LICENCE} (pełny tekst licencji FTDI) - biblioteki FTDI NIE zostaną dołączone." >&2
+    echo "       Skopiuj treść https://ftdichip.com/driver-licence-terms-details/ do tego pliku." >&2
+    FT4222_SRC=""
+fi
+if [[ -n "${FT4222_SRC}" && -n "${FTD2XX_SRC}" ]]; then
+    echo "==> Biblioteki FTDI do aplikacji: $(basename "$(readlink -f "${FT4222_SRC}")"), $(basename "$(readlink -f "${FTD2XX_SRC}")")"
+    mkdir -p "${FW}"
+    cp -L "${FT4222_SRC}" "${FW}/libft4222.dylib"
+    cp -L "${FTD2XX_SRC}" "${FW}/libftd2xx.dylib"
+    chmod u+w "${FW}/libft4222.dylib" "${FW}/libftd2xx.dylib"
+    install_name_tool -id @rpath/libft4222.dylib "${FW}/libft4222.dylib" 2>/dev/null
+    install_name_tool -id @rpath/libftd2xx.dylib "${FW}/libftd2xx.dylib" 2>/dev/null
+    # libft4222 wskazuje libftd2xx pełną ścieżką (np. /usr/local/lib/...) - na kopię obok siebie w aplikacji
+    OLD_D2XX=$(otool -L "${FW}/libft4222.dylib" | awk '/libftd2xx/ {print $1; exit}')
+    if [[ -n "${OLD_D2XX}" ]]; then
+        install_name_tool -change "${OLD_D2XX}" @loader_path/libftd2xx.dylib "${FW}/libft4222.dylib" 2>/dev/null
+    fi
+    cp "${FTDI_LICENCE}" "${FW}/FTDI-Driver-Licence.txt"          # licencja obok sterownika (warunek FTDI)
+    xattr -cr "${FW}"
+    codesign --force --sign - "${FW}/libftd2xx.dylib" "${FW}/libft4222.dylib"
+    echo "    zależność libft4222 -> $(otool -L "${FW}/libft4222.dylib" | awk '/libftd2xx/ {print $1; exit}')"
+else
+    echo "UWAGA: brak bibliotek FTDI w ${FTDI_DIR} - aplikacja BEZ nich (skop wymaga instalacji przez użytkownika)" >&2
+fi
+
 # Podpis ad-hoc (wymagany na Apple Silicon; pieczętuje Info.plist i zasoby)
 echo "==> Podpisywanie (ad-hoc)..."
 codesign --force --deep --sign - "${APP}"

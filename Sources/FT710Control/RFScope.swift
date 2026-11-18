@@ -206,6 +206,9 @@ struct RFScopeView: View {
     /// Zawody (stacje zrobione - czerwone albo ukryte) i czy zakładka ZAWODY jest otwarta.
     var contest: ContestManager? = nil
     var contestActive = false
+    /// Filtr odsłuchu (pasmo i wycięcia) narysowany w eterze; nil - bez nakładki.
+    var listeningFilter: ListeningFilterState? = nil
+    var cwPitchHz = 700.0
 
     @State private var hoverX: CGFloat?
     // przewijanie skopu (przeciąganie, gładzik, Shift + kółko)
@@ -316,6 +319,12 @@ struct RFScopeView: View {
                             color: look.traceNSColor, display: look)
                 .frame(width: size.width, height: size.height)
             .overlay(gridCanvas)
+            .overlay {
+                if let listeningFilter {
+                    ScopePassbandOverlay(filter: listeningFilter, vfoHz: vfoHz, modeName: modeName,
+                                         cwPitchHz: cwPitchHz, lowHz: lowHz, highHz: highHz)
+                }
+            }
             .overlay(alignment: .top) {
                 if let cluster {
                     ScopeSpotOverlay(cluster: cluster, pota: pota ?? POTAManager.idle,
@@ -513,10 +522,10 @@ struct RFScopeView: View {
         return lowHz + Int((t * Double(highHz - lowHz)).rounded())
     }
 
-    /// Szersze spany: krok 100 Hz, węższe: 10 Hz.
+    /// Kliknięcie w skop: zaokrąglenie do 10 Hz przy każdym zakresie (wcześniej 100 Hz przy szerokich - w CW
+    /// do 50 Hz odstrojenia).
     private func rounded(_ hz: Int) -> Int {
-        let step = scope.spanHz >= 20_000 ? 100 : 10
-        return (hz + step / 2) / step * step
+        (hz + 5) / 10 * 10
     }
 
     private var lowHz: Int { scope.lowHz }
@@ -562,6 +571,7 @@ extension RFScopeView: Equatable {
             && lhs.embedded == rhs.embedded && lhs.scope === rhs.scope && lhs.model === rhs.model
             && lhs.cluster === rhs.cluster && lhs.pota === rhs.pota && lhs.stepHz == rhs.stepHz
             && lhs.contest === rhs.contest && lhs.contestActive == rhs.contestActive
+            && lhs.listeningFilter === rhs.listeningFilter && lhs.cwPitchHz == rhs.cwPitchHz
     }
 }
 
@@ -614,5 +624,47 @@ struct ScopeStatusText: View {
             .lineLimit(1)
             .truncationMode(.tail)
             .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+
+/// Filtr odsłuchu na skopie RF: żółte pasmo (to, co słychać) i czerwone wycięcia - w skali częstotliwości skopu.
+/// Osobny widok obserwujący tylko stan filtra: przeciąganie krawędzi na widmie audio nie przelicza skopu.
+struct ScopePassbandOverlay: View {
+    @ObservedObject var filter: ListeningFilterState
+    let vfoHz: Int
+    let modeName: String
+    let cwPitchHz: Double
+    let lowHz: Int
+    let highHz: Int
+
+    var body: some View {
+        Canvas { context, size in
+            guard highHz > lowHz else { return }
+            func x(_ audio: Double) -> CGFloat? {
+                guard let rf = ListeningFilterState.rfHz(audioHz: audio, vfoHz: vfoHz, mode: modeName, cwPitch: cwPitchHz)
+                else { return nil }
+                return size.width * CGFloat(Double(rf - lowHz) / Double(highHz - lowHz))
+            }
+            if filter.enabled, let a = x(filter.low), let b = x(filter.high) {
+                let left = min(a, b), right = max(a, b)
+                context.fill(Path(CGRect(x: left, y: 0, width: max(right - left, 1), height: size.height)),
+                             with: .color(.yellow.opacity(0.10)))
+                for edge in [left, right] {
+                    var line = Path()
+                    line.move(to: CGPoint(x: edge, y: 0))
+                    line.addLine(to: CGPoint(x: edge, y: size.height))
+                    context.stroke(line, with: .color(.yellow.opacity(0.75)), lineWidth: 1)
+                }
+            }
+            for hz in filter.notches {
+                guard let nx = x(hz) else { continue }
+                var line = Path()
+                line.move(to: CGPoint(x: nx, y: 0))
+                line.addLine(to: CGPoint(x: nx, y: size.height))
+                context.stroke(line, with: .color(.red.opacity(0.85)), style: StrokeStyle(lineWidth: 1, dash: [4, 3]))
+            }
+        }
+        .allowsHitTesting(false)
     }
 }

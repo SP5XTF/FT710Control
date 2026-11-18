@@ -9,6 +9,9 @@ struct StationProfileView: View {
     @EnvironmentObject private var uploader: LogUploader
     @AppStorage(AppLanguage.storageKey) private var languageCode = AppLanguage.current.rawValue
     @Environment(\.dismiss) private var dismiss
+    /// Wbudowany w okno Konfiguracja: bez „Anuluj”, „Zapisz” nie zamyka okna, bez własnego tytułu okna.
+    var embedded = false
+    @State private var savedNote = false
 
     static let completedKey = "stationProfileCompleted"
 
@@ -78,7 +81,10 @@ struct StationProfileView: View {
                             .help(L("Profil można uzupełnić później: menu FT710Control → Profil stacji…"))
                     }
                     Spacer()
-                    if !firstRun {
+                    if savedNote {
+                        Text(L("Zapisano")).font(.callout).foregroundStyle(Theme.ok)
+                    }
+                    if !firstRun && !embedded {
                         Button(L("Anuluj"), role: .cancel) { dismiss() }
                             .keyboardShortcut(.cancelAction)
                     }
@@ -89,9 +95,9 @@ struct StationProfileView: View {
             }
             .padding(24)
         }
-        .frame(width: 820, height: 680)
+        .frame(width: 820, height: embedded ? nil : 680)
         .id(languageCode)
-        .navigationTitle(L("Profil stacji"))
+        .navigationTitle(embedded ? L("Konfiguracja") : L("Profil stacji"))
         .onAppear(perform: loadOnce)
     }
 
@@ -285,7 +291,12 @@ struct StationProfileView: View {
             if clublog.callsign.isEmpty { clublog.callsign = call }
         }
         UserDefaults.standard.set(true, forKey: Self.completedKey)
-        dismiss()
+        if embedded {
+            savedNote = save
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3) { savedNote = false }
+        } else {
+            dismiss()
+        }
     }
 }
 
@@ -297,6 +308,9 @@ struct ProfileCommands: Commands {
         CommandGroup(after: .appInfo) {
             Button(L("Profil stacji…")) { openWindow(id: "profile") }
                 .keyboardShortcut(",", modifiers: [.command, .shift])
+            // wszystkie ustawienia w jednym oknie (ta sama grupa - zawsze pod „Profilem stacji”)
+            Button(L("Konfiguracja…")) { openWindow(id: "config") }
+                .keyboardShortcut(",", modifiers: .command)
         }
     }
 }

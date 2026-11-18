@@ -63,15 +63,9 @@ tab shows the offset from a time server; with more than 1 s QSOs fail.
 
 5. EXTRA FILES - only for selected features
 -------------------------------------------
-a) RF SCOPE (spectrum and waterfall from the radio) - FTDI libraries (free):
-   - D2XX driver for macOS:     https://ftdichip.com/drivers/d2xx-drivers/   (libftd2xx...dylib)
-   - LibFT4222 library for macOS: ftdichip.com -> Products -> FT4222H -> Software Examples
-     -> "LibFT4222 for Mac"   (libft4222...dylib)
-   Install in Terminal (in the folder with the unpacked files):
-     sudo mkdir -p /usr/local/lib
-     sudo cp libftd2xx*.dylib libft4222*.dylib /usr/local/lib/
-     sudo xattr -d com.apple.quarantine /usr/local/lib/libft*.dylib
-   Without them the program works normally - only the RF scope is missing.
+a) RF SCOPE (spectrum and waterfall from the radio) - NOTHING TO INSTALL.
+   The FTDI libraries (D2XX and LibFT4222) are built into the program. On the radio just set
+   MENU -> OPERATION SETTING -> GENERAL -> SCU-LAN10 = ON. FTDI licence: the Licencje.txt file.
 
 b) LoTW - the TQSL program (ARRL): https://www.arrl.org/tqsl-download
    Install it in Applications (TrustedQSL) and add your LoTW certificate. If the certificate
@@ -91,25 +85,21 @@ d) Club Log - uploading and confirmations need the program's API key (write to t
 e) WSJT-X / JTDX (optional):
    - QSOs to the logbook: WSJT-X -> Settings -> Reporting -> UDP Server 127.0.0.1, port 2237;
    - radio control through this program (CAT Share): in WSJT-X radio "Hamlib NET rigctl",
-     Network Server 127.0.0.1:4532 (in FT-710 Control turn on the CAT SHARE tab).
+     Network Server 127.0.0.1:4532 (in FT-710 Control: Configuration (Cmd-,) -> CAT Share).
 
 
 6. WHAT'S NEW IN THIS VERSION - worth checking
 ----------------------------------------------
-- PSK31 and PSK63: a new PSK tab (receive with AFC and squelch, transmit, macros, log).
-- Window menu: antenna SWR sweep across a band (SWR curve, comparing measurements) and a "Who hears
-  me" map from PSKReporter, with the night side and the day/night line.
-- Layout for a MacBook (window from 1280 pt): adjustable and collapsible bottom panel (Opt-Cmd-B),
-  collapsible left column boxes, VFO-B in one row, a MORE menu for tabs; tooltips on radio buttons.
-- Log: "Add manually…" (form on the main tab) and "Add QSO…" (log window) - e.g. QSOs from a second
-  radio on 2 m, 70 cm, 23 cm, with propagation (repeater, satellite…), radio and power.
-- QRZ/HamQTH data follows call changes (e.g. after an incomplete "SP5X"); QSOs from WSJT-X/JTDX are
-  completed with QRZ data.
-- File menu: program settings backup and restore (no passwords). Help menu: diagnostic report (one
-  file for a bug report) and the "CAT log" window (formerly the CAT LOG tab).
-- The remote password is in the macOS Keychain (moved automatically on first launch).
-- Earlier (0.9.x): desktop layout of the remote panel, FT8 waterfall in the browser, FT8 Hound,
-  transmit equalizer, scope and audio recovery after sleep, NAR, DNR/NB/PROC as on the radio.
+- The RF scope works right away: the FTDI libraries are built into the program (nothing to install).
+- Configuration (Cmd-,): all settings in one window with descriptions - station, radio and CAT,
+  scope and waterfall, log and services, alerts, CAT Share, remote operation, program. The former
+  DISPLAY, CAT SHARE and REMOTE tabs are now Configuration sections.
+- Listening filter (AUDIO SPECTRUM tab): a steep band-pass filter on the Mac (SSB, CW 500/200/100 Hz,
+  data), drag the edges, notches by double-click; the band and notches also show on the RF scope.
+- Tuning from cluster spots, POTA and band buttons lands right away (before, a mode change could leave
+  it off frequency the first time); clicking the scope is accurate to 10 Hz.
+- Earlier (0.9.4-0.9.5): PSK31/PSK63, antenna SWR sweep, "Who hears me" map, MacBook layout, manual
+  QSO entry, settings backup, diagnostic report.
 
 7. REPORTING BUGS
 -----------------

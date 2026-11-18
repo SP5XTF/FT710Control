@@ -108,14 +108,16 @@ final class FT4222Library {
         self.setClock = setClock
     }
 
-    /// Kolejność: zmienna środowiskowa, typowe katalogi, potem dowolna wersja libft4222*.dylib z tych katalogów.
+    /// Kolejność: zmienna środowiskowa, biblioteki WBUDOWANE w aplikację (zgodna para libft4222 + libftd2xx,
+    /// użytkownik nic nie instaluje), potem typowe katalogi systemu (starsze instalacje ręczne), potem dowolna
+    /// wersja libft4222*.dylib z tych katalogów.
     private static func candidates(prefix: String) -> [String] {
         var result: [String] = []
         if prefix == "libft4222", let env = ProcessInfo.processInfo.environment["FT4222_LIB"] {
             result.append(env)
         }
-        let dirs = ["/usr/local/lib", "/opt/homebrew/lib", NSHomeDirectory() + "/lib",
-                    Bundle.main.bundlePath + "/Contents/Frameworks"]
+        let dirs = [Bundle.main.bundlePath + "/Contents/Frameworks",
+                    "/usr/local/lib", "/opt/homebrew/lib", NSHomeDirectory() + "/lib"]
         for dir in dirs {
             result.append("\(dir)/\(prefix).dylib")
             result.append("\(dir)/\(prefix).1.dylib")

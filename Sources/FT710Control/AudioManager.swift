@@ -76,7 +76,20 @@ final class AudioManager: ObservableObject {
         rx.denoiser.setConfig(AudioDenoiser.Config(level: nrLevel, voiceBand: nrVoiceBand, agc: nrAGC,
                                                    anf: nrANF, nb: nrNB, apf: apfEnabled,
                                                    apfHz: apfCenter, apfBandwidth: apfBandwidth,
-                                                   aiStrength: aiStrength, eq: eqEnabled, eqGains: eqGains))
+                                                   aiStrength: aiStrength, eq: eqEnabled, eqGains: eqGains,
+                                                   band: listeningFilter.enabled, bandLow: listeningFilter.low,
+                                                   bandHigh: listeningFilter.high, notches: listeningFilter.notches))
+    }
+
+    // MARK: - Filtr odsłuchu (pasmowy FIR + wycięcia ręczne)
+
+    /// Stan filtra w osobnym obiekcie: obserwują go tylko widmo audio i nakładka na skopie RF - przeciąganie
+    /// krawędzi (dziesiątki zmian na sekundę) nie przelicza całego okna głównego.
+    let listeningFilter = ListeningFilterState()
+
+    /// Gotowe ustawienie - CW wokół tonu CW (tego samego co APF).
+    func applyFilterPreset(_ preset: ListeningFilterState.Preset) {
+        listeningFilter.apply(preset, pitch: apfCenter)
     }
 
     /// Ustawienia zapisane przyciskiem „Zapisz ustawienia” - program startuje z nimi do następnego zapisu.
@@ -125,6 +138,8 @@ final class AudioManager: ObservableObject {
         tx.muted = true
         tx.appliesTXEqualizer = true                       // korektor nadawania tylko w torze mikrofon → radio
         applyTXEQ()
+        listeningFilter.onChange = { [weak self] in self?.applyNR() }
+        applyNR()                                          // zapamiętany filtr odsłuchu i wycięcia - od startu
         // Odzyskiwanie toru dźwięku: zmiana konfiguracji silnika (np. głośniki monitora znikają po jego uśpieniu),
         // wybudzenie monitora albo Maca i strażnik - odsłuch włączony, a dźwięk z radia nie płynie.
         rx.onConfigurationChange = { [weak self] in

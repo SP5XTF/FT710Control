@@ -806,6 +806,57 @@ final class CoreLogicTests: XCTestCase {
         XCTAssertEqual(SolarTerminator.terminator(at: date(2026, 11, 6, 12)).count, 181, "co 2° od -180 do 180")
     }
 
+    /// Filtr odsłuchu: pasmo (FIR) i wycięcie - przetwarzanie w kawałkach jak w torze dźwięku.
+    func testListeningFilters() {
+        let rate = 48_000.0
+        func level(_ hz: Double, band: (Double, Double)?, notches: [Double]) -> Double {
+            let filters = ListeningFilters()
+            var output: [Float] = []
+            let total = 48_000
+            var buffer = [Float](repeating: 0, count: 512)
+            var n = 0
+            while n < total {
+                for i in 0..<512 { buffer[i] = Float(sin(2 * Double.pi * hz * Double(n + i) / rate)) }
+                buffer.withUnsafeMutableBufferPointer { ptr in
+                    if let band { filters.processBand(ptr.baseAddress!, count: 512, low: band.0, high: band.1, rate: rate) }
+                    if !notches.isEmpty { filters.processNotches(ptr.baseAddress!, count: 512, frequencies: notches, rate: rate) }
+                }
+                output += buffer
+                n += 512
+            }
+            let tail = output.suffix(24_000)                    // po ustaleniu (opóźnienie FIR 16 ms)
+            let rms = (tail.reduce(0) { $0 + Double($1 * $1) } / Double(tail.count)).squareRoot()
+            return 20 * log10(max(rms, 1e-12) / (0.5).squareRoot())
+        }
+        XCTAssertEqual(level(1000, band: (300, 2700), notches: []), 0, accuracy: 0.1, "w paśmie bez zmian")
+        XCTAssertLessThan(level(3300, band: (300, 2700), notches: []), -80, "poza pasmem stłumione")
+        XCTAssertLessThan(level(1000, band: nil, notches: [1000]), -40, "nośna wycięta")
+        XCTAssertGreaterThan(level(1100, band: nil, notches: [1000]), -1, "100 Hz obok - bez zmian")
+        let taps = ListeningFilters.bandpass(low: 300, high: 2700, rate: rate, count: ListeningFilters.tapCount)
+        XCTAssertEqual(ListeningFilters.responseDB(taps: taps, hz: 2700, rate: rate), -6, accuracy: 0.5, "krawędź -6 dB")
+        XCTAssertLessThan(ListeningFilters.responseDB(taps: taps, hz: 2805, rate: rate), -80, "105 Hz za krawędzią")
+    }
+
+    /// Filtr odsłuchu na skopie RF: ton audio → częstotliwość w eterze dla trybu; ton CW radia (KP).
+    func testListeningFilterOnScope() {
+        let vfo = 14_200_000
+        XCTAssertEqual(ListeningFilterState.rfHz(audioHz: 300, vfoHz: vfo, mode: "USB", cwPitch: 700), 14_200_300)
+        XCTAssertEqual(ListeningFilterState.rfHz(audioHz: 2700, vfoHz: vfo, mode: "DATA-U", cwPitch: 700), 14_202_700)
+        XCTAssertEqual(ListeningFilterState.rfHz(audioHz: 2700, vfoHz: 7_100_000, mode: "LSB", cwPitch: 700), 7_097_300,
+                       "LSB - pasmo poniżej VFO")
+        XCTAssertEqual(ListeningFilterState.rfHz(audioHz: 700, vfoHz: vfo, mode: "CW-U", cwPitch: 700), vfo,
+                       "CW: ton równy tonowi radia - dokładnie na VFO")
+        XCTAssertEqual(ListeningFilterState.rfHz(audioHz: 750, vfoHz: vfo, mode: "CW-U", cwPitch: 700), vfo + 50)
+        XCTAssertEqual(ListeningFilterState.rfHz(audioHz: 750, vfoHz: vfo, mode: "CW-L", cwPitch: 700), vfo - 50)
+        XCTAssertNil(ListeningFilterState.rfHz(audioHz: 1000, vfoHz: vfo, mode: "AM", cwPitch: 700))
+        XCTAssertNil(ListeningFilterState.rfHz(audioHz: 1000, vfoHz: vfo, mode: "RTTY-L", cwPitch: 700))
+        // KP: 00–75 → 300–1050 Hz
+        XCTAssertTrue(RadioControl.match("KP40").map { $0.0 == .keyPitch && $0.1 == 40 } ?? false)
+        XCTAssertEqual(RadioControl.keyPitch.setCommand(40), "KP40;")
+        XCTAssertEqual(RadioControl.keyPitch.query, "KP;")
+        XCTAssertTrue(RadioControl.match("KS025").map { $0.0 == .keySpeed } ?? false, "KS nie mylone z KP")
+    }
+
     // MARK: - HamQTH
 
     func testHamQTHParsing() throws {

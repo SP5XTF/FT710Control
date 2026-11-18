@@ -9,11 +9,18 @@ func formatFrequency(_ hz: Int) -> String {
 /// Linia widma + waterfall dźwięku odbiornika.
 struct SpectrumView: View {
     @ObservedObject var model: SpectrumModel
+    /// Ustawienia dźwięku (gotowe pasma wokół tonu CW) - bez obserwowania całego obiektu.
+    let audio: AudioManager
+    /// Filtr odsłuchu (pasmo i wycięcia) - sterowany z widma: przeciąganie krawędzi, dwuklik = wycięcie.
+    @ObservedObject var filter: ListeningFilterState
     let dialHz: Int
     let modeCode: String
     let receiving: Bool
 
     @State private var hoverX: CGFloat?
+    /// Przeciągana krawędź filtra (dolna / górna) - wybrana na początku przeciągania.
+    @State private var draggedEdge: FilterEdge?
+    private enum FilterEdge { case low, high }
 
     private let traceHeight: CGFloat = 80
     private let totalHeight: CGFloat = 250
@@ -22,6 +29,7 @@ struct SpectrumView: View {
         GroupBox {
             VStack(alignment: .leading, spacing: 6) {
                 controls
+                filterControls
                 display
                 axis
                 footer
@@ -91,8 +99,15 @@ struct SpectrumView: View {
             ScopeRenderView(frames: model.frames, traceHeight: traceHeight, color: NSColor.systemTeal)
                 .frame(width: size.width, height: size.height)
             .overlay(gridCanvas)
+            .overlay(filterCanvas)
             .overlay(alignment: .topLeading) { cursor(in: size) }
             .contentShape(Rectangle())
+            .gesture(edgeDrag(width: size.width))
+            .onTapGesture(count: 2, coordinateSpace: .local) { point in
+                guard size.width > 0 else { return }
+                let hz = Double(point.x / size.width) * model.maxHz
+                filter.toggleNotch(at: hz, tolerance: 12 / Double(size.width) * model.maxHz)
+            }
             .onContinuousHover { phase in
                 switch phase {
                 case .active(let point): hoverX = point.x
@@ -103,6 +118,86 @@ struct SpectrumView: View {
         .frame(height: totalHeight)
         .background(Color.black)
         .clipShape(RoundedRectangle(cornerRadius: 6))
+    }
+
+    // MARK: - Filtr odsłuchu
+
+    private var filterControls: some View {
+        HStack(spacing: 10) {
+            Toggle(L("Filtr odsłuchu"), isOn: $filter.enabled)
+                .help(L("Filtr pasmowy na Macu (stromy, bez zniekształceń fazy) - tylko to, co słychać; dekodery dostają pełny dźwięk"))
+            Menu(L("Ustawienia")) {
+                ForEach(ListeningFilterState.Preset.allCases) { preset in
+                    Button(preset.name) { audio.applyFilterPreset(preset) }
+                }
+            }
+            .fixedSize()
+            .help(L("Gotowe pasma; CW - wokół tonu CW (tego samego co APF)"))
+            Text("\(Int(filter.low))–\(Int(filter.high)) Hz")
+                .font(.caption.monospacedDigit())
+                .foregroundStyle(filter.enabled ? Theme.text : Theme.dim)
+            if !filter.notches.isEmpty {
+                Text(L("Wycięcia: {1}", filter.notches.sorted().map { "\(Int($0))" }.joined(separator: ", ")))
+                    .font(.caption.monospacedDigit())
+                Button(L("Usuń wycięcia")) { filter.clearNotches() }
+            }
+            Spacer(minLength: 8)
+            Text(L("Przeciągnij żółte krawędzie; dwuklik - wycięcie (ponowny dwuklik usuwa)"))
+                .font(.caption2).foregroundStyle(.secondary).lineLimit(1)
+        }
+        .controlSize(.small)
+    }
+
+    /// Pasmo filtra (przyciemnienie poza nim, żółte krawędzie) i wycięcia (czerwone linie).
+    private var filterCanvas: some View {
+        Canvas { context, size in
+            let scale = size.width / CGFloat(max(model.maxHz, 1))
+            if filter.enabled {
+                let lowX = CGFloat(filter.low) * scale, highX = CGFloat(filter.high) * scale
+                context.fill(Path(CGRect(x: 0, y: 0, width: max(lowX, 0), height: size.height)), with: .color(.black.opacity(0.55)))
+                context.fill(Path(CGRect(x: highX, y: 0, width: max(size.width - highX, 0), height: size.height)),
+                             with: .color(.black.opacity(0.55)))
+                for x in [lowX, highX] {
+                    var edge = Path()
+                    edge.move(to: CGPoint(x: x, y: 0))
+                    edge.addLine(to: CGPoint(x: x, y: size.height))
+                    context.stroke(edge, with: .color(.yellow.opacity(0.9)), lineWidth: 2)
+                    context.fill(Path(roundedRect: CGRect(x: x - 5, y: size.height / 2 - 12, width: 10, height: 24), cornerRadius: 3),
+                                 with: .color(.yellow.opacity(0.9)))
+                }
+            }
+            for hz in filter.notches {
+                let x = CGFloat(hz) * scale
+                var line = Path()
+                line.move(to: CGPoint(x: x, y: 0))
+                line.addLine(to: CGPoint(x: x, y: size.height))
+                context.stroke(line, with: .color(.red.opacity(0.9)), style: StrokeStyle(lineWidth: 1.5, dash: [4, 3]))
+            }
+        }
+        .allowsHitTesting(false)
+    }
+
+    /// Przeciąganie krawędzi filtra (chwyt do 12 pt od krawędzi); poza krawędziami - bez działania.
+    private func edgeDrag(width: CGFloat) -> some Gesture {
+        DragGesture(minimumDistance: 3, coordinateSpace: .local)
+            .onChanged { value in
+                guard filter.enabled, width > 0 else { return }
+                let scale = width / CGFloat(max(model.maxHz, 1))
+                if draggedEdge == nil {
+                    let lowX = CGFloat(filter.low) * scale, highX = CGFloat(filter.high) * scale
+                    let start = value.startLocation.x
+                    if abs(start - lowX) <= 12, abs(start - lowX) <= abs(start - highX) { draggedEdge = .low }
+                    else if abs(start - highX) <= 12 { draggedEdge = .high }
+                    else { return }
+                }
+                let hz = Double(value.location.x / scale)
+                switch draggedEdge {
+                case .low: filter.set(low: min(hz, filter.high - 50), high: filter.high)
+                case .high: filter.set(low: filter.low, high: max(hz, filter.low + 50))
+                case nil: break
+                }
+            }
+            .onEnded { _ in draggedEdge = nil }
     }
 
     private var gridCanvas: some View {

@@ -76,6 +76,10 @@ fill "Design/dmg/READ_ME.txt" > "${STAGE}/READ ME.txt"
     printf '\n\n---\n\nYaesu i FT-710 są znakami towarowymi Yaesu Musen Co., Ltd. FT-710 Control jest niezależnym programem.\n'
     printf 'Yaesu and FT-710 are trademarks of Yaesu Musen Co., Ltd. FT-710 Control is an independent program.\n'
 } > "${STAGE}/Licencje.txt"
+# pełna licencja FTDI w obrazie (warunek zgody FTDI na dołączenie bibliotek) - gdy biblioteki są w aplikacji
+if [[ -f "${APP}/Contents/Frameworks/FTDI-Driver-Licence.txt" ]]; then
+    cp "${APP}/Contents/Frameworks/FTDI-Driver-Licence.txt" "${STAGE}/Licencja FTDI - FTDI Licence.txt"
+fi
 
 mkdir -p dist
 OUT="dist/${APP_NAME}-${VERSION}.dmg"

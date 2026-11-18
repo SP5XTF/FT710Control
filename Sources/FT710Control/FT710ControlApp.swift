@@ -89,6 +89,14 @@ struct FT710ControlApp: App {
             HelpView()
         }
 
+        Window(L("Konfiguracja"), id: "config") {
+            ConfigurationView()
+        }
+        .defaultSize(width: 1110, height: 875)
+        // szerokość stała (z zawartości), wysokość 600 pt i więcej - wcześniej zapamiętany wąski rozmiar
+        // pokazywał samą listę działów
+        .windowResizability(.contentSize)
+
         Window(L("Kto mnie słyszy"), id: "heard") {
             HeardMeView()
         }

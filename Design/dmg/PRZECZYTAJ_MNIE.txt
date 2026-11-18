@@ -64,15 +64,9 @@ FT8/FT4 pokazuje różnicę względem czasu wzorcowego; przy ponad 1 s łączno�
 
 5. DODATKOWE PLIKI - tylko dla wybranych funkcji
 ------------------------------------------------
-a) SKOP RF (widmo i waterfall z radia) - biblioteki FTDI (darmowe):
-   - sterownik D2XX dla macOS:   https://ftdichip.com/drivers/d2xx-drivers/   (plik libftd2xx...dylib)
-   - biblioteka LibFT4222 dla macOS: ftdichip.com -> Products -> FT4222H -> Software Examples
-     -> „LibFT4222 for Mac”   (plik libft4222...dylib)
-   Instalacja w Terminalu (w folderze z rozpakowanymi plikami):
-     sudo mkdir -p /usr/local/lib
-     sudo cp libftd2xx*.dylib libft4222*.dylib /usr/local/lib/
-     sudo xattr -d com.apple.quarantine /usr/local/lib/libft*.dylib
-   Bez tego program działa normalnie - nie ma tylko skopu RF.
+a) SKOP RF (widmo i waterfall z radia) - NIC NIE TRZEBA INSTALOWAĆ.
+   Biblioteki FTDI (D2XX i LibFT4222) są wbudowane w program. W radiu wystarczy ustawić
+   MENU -> OPERATION SETTING -> GENERAL -> SCU-LAN10 = ON. Licencja FTDI: plik Licencje.txt.
 
 b) LoTW - program TQSL (ARRL): https://www.arrl.org/tqsl-download
    Zainstaluj w folderze Aplikacje (TrustedQSL) i dodaj swój certyfikat LoTW. Jeśli certyfikat
@@ -92,25 +86,21 @@ d) Club Log - wysyłka i potwierdzenia wymagają klucza API programu (napisz do 
 e) WSJT-X / JTDX (opcjonalnie):
    - łączności do dziennika: WSJT-X -> Settings -> Reporting -> UDP Server 127.0.0.1, port 2237;
    - sterowanie radiem przez program (CAT Share): w WSJT-X radio „Hamlib NET rigctl”,
-     Network Server 127.0.0.1:4532 (w FT-710 Control włącz zakładkę CAT SHARE).
+     Network Server 127.0.0.1:4532 (w FT-710 Control: Konfiguracja (Cmd-,) -> CAT Share).
 
 
 6. CO NOWEGO W TEJ WERSJI - warto sprawdzić
 -------------------------------------------
-- PSK31 i PSK63: nowa zakładka PSK (odbiór z AFC i blokadą szumu, nadawanie, makra, dziennik).
-- Menu Okno: pomiar SWR anteny w paśmie (krzywa SWR, porównanie pomiarów) i mapa „Kto mnie słyszy”
-  z PSKReporter, z nocą i linią dnia i nocy.
-- Układ dla MacBooka (okno od 1280 pt): zmienna wysokość i zwijanie dolnego panelu (⌥⌘B), zwijane
-  ramki lewej kolumny, VFO-B w jednym wierszu, menu WIĘCEJ dla zakładek; podpowiedzi przycisków radia.
-- Dziennik: „Dodaj ręcznie…” (formularz na karcie głównej) i „Dodaj QSO…” (okno dziennika) - np.
-  łączności z drugiego radia na 2 m, 70 cm, 23 cm, z propagacją (przemiennik, satelita…), radiem i mocą.
-- Dane z QRZ/HamQTH podążają za zmianą znaku (np. po niepełnym „SP5X”); łączności z WSJT-X/JTDX
-  uzupełniają się danymi z QRZ.
-- Menu Plik: kopia i przywracanie ustawień programu (bez haseł). Menu Pomoc: raport diagnostyczny
-  (jeden plik do zgłoszenia błędu) i okno „Dziennik CAT” (wcześniej zakładka LOG CAT).
-- Hasło pracy zdalnej w pęku kluczy macOS (przenosi się samo przy pierwszym uruchomieniu).
-- Wcześniej (0.9.x): układ komputerowy panelu zdalnego, wodospad FT8 w przeglądarce, FT8 Hound,
-  korektor nadawania, odzyskiwanie skopu i dźwięku po uśpieniu, NAR, DNR/NB/PROC jak w radiu.
+- Skop RF działa od razu: biblioteki FTDI są wbudowane w program (nic nie trzeba instalować).
+- Konfiguracja (Cmd-,): wszystkie ustawienia w jednym oknie z opisami - stacja, radio i CAT, skop
+  i wodospad, dziennik i serwisy, alerty, CAT Share, praca zdalna, program. Dawne zakładki EKRAN,
+  CAT SHARE i ZDALNIE są teraz działami Konfiguracji.
+- Filtr odsłuchu (zakładka WIDMO AUDIO): stromy filtr pasmowy na Macu (SSB, CW 500/200/100 Hz,
+  dane), przeciąganie krawędzi, wycięcia dwuklikiem; pasmo i wycięcia widać też na skopie RF.
+- Strojenie ze spotów klastra, POTA i przycisków pasm trafia od razu (wcześniej przy zmianie trybu
+  bywało odstrojone za pierwszym razem); kliknięcie w skop z dokładnością 10 Hz.
+- Wcześniej (0.9.4-0.9.5): PSK31/PSK63, pomiar SWR anteny, mapa „Kto mnie słyszy”, układ dla
+  MacBooka, ręczne dodawanie QSO, kopia ustawień, raport diagnostyczny.
 
 7. ZGŁASZANIE BŁĘDÓW
 --------------------

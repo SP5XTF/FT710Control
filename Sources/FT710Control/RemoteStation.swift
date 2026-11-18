@@ -651,8 +651,8 @@ final class RemoteStation: ObservableObject {
         case "band":
             // przycisk pasma: częstotliwość i (opcjonalnie) tryb z pamięci pasma w przeglądarce
             guard cat.isConnected, let hz = (message["hz"] as? NSNumber)?.intValue, hz > 0 else { return }
-            cat.setActiveFrequency(hz)
-            if let code = message["mc"] as? String, RadioMode.names[code] != nil, cat.modeCode != code { cat.setMode(code) }
+            let code = (message["mc"] as? String).flatMap { RadioMode.names[$0] != nil ? $0 : nil }
+            cat.tune(hz: hz, mode: code)
         case "vfo":
             guard cat.isConnected, let op = message["op"] as? String else { return }
             if op == "ab" { cat.copyAtoB() } else if op == "swap" { cat.swapVFO() }

@@ -334,8 +334,7 @@ final class FT8Manager: ObservableObject {
     func tune(to hz: Int) {
         guard let cat, cat.isConnected else { return }
         if transmitting || txEnabled { haltTX(L("Zmiana pasma - nadawanie zatrzymane.")) }
-        cat.setActiveFrequency(hz)
-        if cat.modeCode != "C" { cat.setMode("C") }
+        cat.tune(hz: hz, mode: "C")
         clearActivity()
     }
 

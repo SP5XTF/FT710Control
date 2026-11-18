@@ -338,8 +338,7 @@ final class POTAManager: ObservableObject {
     /// i znak z numerem parku do formularza dziennika.
     func select(_ spot: POTASpot) {
         if let cat, cat.isConnected {
-            cat.setActiveFrequency(spot.frequencyHz)
-            if let code = Self.radioMode(for: spot), cat.modeCode != code { cat.setMode(code) }
+            cat.tune(hz: spot.frequencyHz, mode: Self.radioMode(for: spot))
         }
         logbook?.prefill(spot.activator)
         NotificationCenter.default.post(name: .potaSelected, object: nil, userInfo: [

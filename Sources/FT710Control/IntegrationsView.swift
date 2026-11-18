@@ -8,15 +8,18 @@ struct IntegrationsView: View {
     @ObservedObject var store: LogbookStore
     @Environment(\.dismiss) private var dismiss
     @State private var selection: LogService? = .lotw
+    /// Wbudowany w okno Konfiguracja: bez tytułu i „Zamknij”, szerokość z okna (wcześniej stałe 900 pt
+    /// wychodziło na listę działów).
+    var embedded = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(L("Usługi online")).font(.title2.bold())
+            if !embedded { Text(L("Usługi online")).font(.title2.bold()) }
             HStack(alignment: .top, spacing: 14) {
                 List(LogService.allCases, selection: $selection) { service in
                     ServiceRow(cfg: uploader.config(service)).tag(service)
                 }
-                .frame(width: 300)
+                .frame(width: embedded ? 260 : 300)
                 if let selection {
                     ServiceDetail(service: selection, cfg: uploader.config(selection), uploader: uploader, store: store)
                         .id(selection)
@@ -28,13 +31,16 @@ struct IntegrationsView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
-            HStack {
-                Spacer()
-                Button(L("Zamknij")) { dismiss() }.keyboardShortcut(.cancelAction)
+            if !embedded {
+                HStack {
+                    Spacer()
+                    Button(L("Zamknij")) { dismiss() }.keyboardShortcut(.cancelAction)
+                }
             }
         }
-        .padding(20)
-        .frame(width: 900, height: 600)
+        .padding(embedded ? 0 : 20)
+        .frame(width: embedded ? nil : 900, height: embedded ? 600 : 600)
+        .frame(maxWidth: embedded ? .infinity : nil, alignment: .leading)
     }
 }
 

@@ -18,6 +18,8 @@ enum RadioControl: String, CaseIterable, Hashable {
     case keySpeed
     /// NAR - wąski filtr odbiornika (NA0: 0 wyłączony, 1 włączony).
     case narrow
+    /// Ton CW radia (KP, 00–75 → 300–1050 Hz co 10 Hz) - położenie filtra odsłuchu na skopie w CW.
+    case keyPitch
 
     /// Prefiks odpowiedzi (i komendy) - po nim następuje wartość liczbowa.
     var prefix: String {
@@ -48,6 +50,7 @@ enum RadioControl: String, CaseIterable, Hashable {
         case .amc: return "AO"
         case .keySpeed: return "KS"
         case .narrow: return "NA0"
+        case .keyPitch: return "KP"
         }
     }
 
@@ -67,6 +70,7 @@ enum RadioControl: String, CaseIterable, Hashable {
         case .amc: return 3
         case .keySpeed: return 3
         case .narrow: return 1
+        case .keyPitch: return 2
         }
     }
 
@@ -92,6 +96,7 @@ enum RadioControl: String, CaseIterable, Hashable {
         case .amc: return 1...100
         case .keySpeed: return 4...60
         case .narrow: return 0...1
+        case .keyPitch: return 0...75
         }
     }
 

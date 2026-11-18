@@ -4,24 +4,43 @@ import SwiftUI
 /// Zmiany widać od razu na skopie nad zakładkami i są zapamiętywane.
 struct DisplayView: View {
     @ObservedObject var display: DisplaySettings
+    /// Układ pionowy (okno Konfiguracja): grupy jedna pod drugą zamiast pięciu kolumn obok siebie.
+    var vertical = false
     @AppStorage("scope.showCluster") private var showClusterOnScope = true
     @AppStorage("scope.showPOTA") private var showPOTAOnScope = true
 
 
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            paletteBox
-            spectrumBox
-            scopeSpotsBox
-            modeBox
-            VStack(alignment: .leading, spacing: 8) {
-                Button(L("Przywróć domyślne")) { display.resetToDefaults() }
-                Text(L("Zmiany widać od razu na skopie i są zapamiętywane."))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
+        if vertical {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    Text(L("Zmiany widać od razu na skopie i są zapamiętywane."))
+                        .font(.caption).foregroundStyle(.secondary)
+                    Spacer()
+                    Button(L("Przywróć domyślne")) { display.resetToDefaults() }
+                }
+                paletteBox.frame(maxWidth: .infinity, alignment: .leading)
+                modeBox.frame(maxWidth: .infinity, alignment: .leading)
+                HStack(alignment: .top, spacing: 12) {
+                    spectrumBox.frame(maxWidth: .infinity, alignment: .leading)
+                    scopeSpotsBox.frame(maxWidth: .infinity, alignment: .leading)
+                }
             }
-            .frame(width: 170)
+        } else {
+            HStack(alignment: .top, spacing: 12) {
+                paletteBox
+                spectrumBox
+                scopeSpotsBox
+                modeBox
+                VStack(alignment: .leading, spacing: 8) {
+                    Button(L("Przywróć domyślne")) { display.resetToDefaults() }
+                    Text(L("Zmiany widać od razu na skopie i są zapamiętywane."))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .frame(width: 170)
+            }
         }
     }
 

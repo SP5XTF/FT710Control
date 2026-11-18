@@ -104,6 +104,10 @@ Polski / English wybierasz w pasku stanu. Zmiana działa od razu, bez rozłącza
 • **Ramki lewej kolumny** (Pasmo, Tryb, RX DSP / Filtr, AGC, NR Mac) zwijasz kliknięciem tytułu – rzadko używane nie zabierają miejsca; stan jest zapamiętywany.
 • Gdy kolumna się nie mieści, widać pasek przewijania. Przy niskim oknie dolny panel sam oddaje miejsce górze (VFO, wskaźniki, skop).
 • **Wąskie okno** (od 1280 pt – mieści się na MacBooku Air bez zewnętrznego monitora): VFO-B pokazuje się jednym wierszem pod VFO-A (częstotliwość, tryb, TX przy SPLIT), a zakładki, które się nie mieszczą, są w menu **WIĘCEJ ▾** na końcu paska (wybrana pokazuje tam swoją nazwę).
+
+**Konfiguracja** (menu programu → **Konfiguracja…**, ⌘,)
+• Wszystkie ustawienia w jednym oknie, z opisem każdego działu: **Stacja** (profil, konta QRZ/HamQTH), **Radio i CAT** (port, prędkość, automatyczne łączenie, limit czasu nadawania), **Skop i wodospad**, **Dziennik i serwisy** (LoTW, eQSL, QRZ, Club Log, HRDLog, WRL), **Alerty**, **CAT Share**, **Praca zdalna** (z tunelem Cloudflare) i **Program** (język, aktualizacje, kopia ustawień, raport diagnostyczny).
+• Dawne zakładki EKRAN, CAT SHARE i ZDALNIE są teraz działami Konfiguracji. Ustawienia pracy (np. opcje FT8, kluczowanie CW, filtry DSP) zostają też w zakładkach, gdzie są potrzebne przy pracy.
 """,
                   bodyEN: """
 **Connecting to the radio**
@@ -129,6 +133,10 @@ Polski / English is selected in the status bar. The change is immediate and does
 • Collapse the **left column boxes** (Band, Mode, RX DSP / Filter, AGC, NR Mac) by clicking their title – rarely used ones take no space; the state is remembered.
 • When a column does not fit, a scroll bar is shown. In a low window the bottom panel gives room to the top by itself (VFO, meters, scope).
 • **Narrow window** (from 1280 pt – fits a MacBook Air without an external monitor): VFO-B is shown as one row under VFO-A (frequency, mode, TX with SPLIT), and tabs that do not fit are in the **MORE ▾** menu at the end of the bar (the selected one shows its name there).
+
+**Configuration** (program menu → **Configuration…**, ⌘,)
+• All settings in one window, with a description of each section: **Station** (profile, QRZ/HamQTH accounts), **Radio and CAT** (port, speed, automatic connection, transmit time limit), **Scope and waterfall**, **Log and services** (LoTW, eQSL, QRZ, Club Log, HRDLog, WRL), **Alerts**, **CAT Share**, **Remote operation** (with the Cloudflare tunnel) and **Program** (language, updates, settings backup, diagnostic report).
+• The former DISPLAY, CAT SHARE and REMOTE tabs are now Configuration sections. Operating settings (e.g. FT8 options, CW keying, DSP filters) also stay in the tabs where they are needed while operating.
 """),
 
         HelpTopic(id: "profile", icon: "person.crop.circle", titlePL: "Profil stacji", titleEN: "Station profile",
@@ -283,14 +291,14 @@ Skop pokazuje te same dane co wyświetlacz radia, odczytywane przez wbudowany mo
 
 **Wymagania (jednorazowo)**
 1. W radiu: MENU → OPERATION SETTING → GENERAL → **SCU-LAN10 = ON**, potem odłącz i podłącz kabel USB. „Diagnostyka USB” musi pokazywać `0403:601C FT4222`.
-2. Biblioteki FTDI w `/usr/local/lib`: **libft4222** (pakiet „LibFT4222 for Mac”) i **libftd2xx** (pakiet D2XX dla macOS) – szczegóły w README.
+2. Biblioteki FTDI (**libft4222** i **libftd2xx**) są **wbudowane w program** z obrazu .dmg – nic nie trzeba instalować. Program zbudowany samodzielnie ze źródeł szuka ich też w `/usr/local/lib`.
 3. Skop może czytać tylko jeden program naraz.
 
 **Obsługa**
 • **Włączony** – start/stop odczytu. Span i tryb CENTER/FIX ustawia się w radiu.
 • Czerwona linia = VFO-A; najechanie pokazuje częstotliwość, **kliknięcie stroi VFO-A**.
 • **Auto** dobiera tło do poziomu szumu; **Kontrast** i szybkość waterfalla – w pasku skopu.
-• Znaki nad linią widma to **spoty z DX Cluster** i **aktywacje POTA** (rzędy dobierane tak, żeby się nie zasłaniały). **Tło znaku** jak kolory w FT8, kolumna DXCC i alerty: turkus – obserwowany znak, magenta – nowy kraj, jasnoróżowe – nowy kraj na paśmie, fiolet – kraj niepotwierdzony, jasny fiolet – niepotwierdzony na paśmie, **bursztyn** – nic z tych rzeczy. **POTA** ma zieloną kreskę i zieloną obwódkę (podpowiedź: park i jego nazwa; ten sam znak w klastrze i POTA – pokazany jako POTA). **Kliknięcie w znak albo jego kreskę** stroi radio dokładnie na stację, wpisuje znak (przy POTA także park) do formularza dziennika i otwiera zakładkę DZIENNIK; kliknięcie kolejnej stacji podmienia znak. Wyłączanie: zakładka EKRAN → **Stacje na skopie**.
+• Znaki nad linią widma to **spoty z DX Cluster** i **aktywacje POTA** (rzędy dobierane tak, żeby się nie zasłaniały). **Tło znaku** jak kolory w FT8, kolumna DXCC i alerty: turkus – obserwowany znak, magenta – nowy kraj, jasnoróżowe – nowy kraj na paśmie, fiolet – kraj niepotwierdzony, jasny fiolet – niepotwierdzony na paśmie, **bursztyn** – nic z tych rzeczy. **POTA** ma zieloną kreskę i zieloną obwódkę (podpowiedź: park i jego nazwa; ten sam znak w klastrze i POTA – pokazany jako POTA). **Kliknięcie w znak albo jego kreskę** stroi radio dokładnie na stację, wpisuje znak (przy POTA także park) do formularza dziennika i otwiera zakładkę DZIENNIK; kliknięcie kolejnej stacji podmienia znak. Wyłączanie: **Konfiguracja (⌘,) → Skop i wodospad** → **Stacje na skopie**.
 • **Przewijanie:** przeciągnij widmo myszą w lewo/prawo, przesuń dwoma palcami w bok na gładziku albo użyj Shift + kółko myszy. **Zwykłe kółko** nad skopem stroi radio krokiem STEP (jak gałka VFO). W trybie CENTER radio trzyma VFO w środku skopu, więc przewinięcie przestraja VFO, a obraz jedzie za nim; w trybie FIX zakres skopu stoi, a zmienia się tylko VFO.
 • **Zapisz ramki** zapisuje surowe ramki na Biurko (do diagnozy), **Log** – przebieg połączenia z FT4222.
 • **Odzyskiwanie połączenia:** gdy skop traci synchronizację z radiem (zakłócenia na USB, długa praca), program sam próbuje połączyć się ponownie – bez limitu prób, dopóki skop jest włączony: odstępy 1, 2, 5, 10, potem co 30 s, a co trzecia próba to sprzętowy reset układu FT4222 (odpowiednik restartu radia dla skopu). Stan widać w nagłówku skopu; szczegóły – przycisk **Log**. Restart radia nie powinien być już potrzebny.
@@ -300,14 +308,14 @@ The scope shows the same data as the radio's display, read through the built-in 
 
 **Requirements (once)**
 1. On the radio: MENU → OPERATION SETTING → GENERAL → **SCU-LAN10 = ON**, then unplug and replug the USB cable. “USB diagnostics” must show `0403:601C FT4222`.
-2. FTDI libraries in `/usr/local/lib`: **libft4222** (“LibFT4222 for Mac” package) and **libftd2xx** (D2XX for macOS) – details in the README.
+2. The FTDI libraries (**libft4222** and **libftd2xx**) are **built into the program** from the .dmg image – nothing to install. A program built from source also looks for them in `/usr/local/lib`.
 3. Only one program at a time can read the scope.
 
 **Using it**
 • **On** – start/stop reading. Span and CENTER/FIX mode are set on the radio.
 • Red line = VFO-A; hovering shows the frequency, **clicking tunes VFO-A**.
 • **Auto** sets the floor to the noise level; **Contrast** and waterfall speed are in the scope bar.
-• Call signs above the spectrum line are **DX Cluster spots** and **POTA activations** (rows chosen so they do not overlap). **Label background** as the FT8 colours, the DXCC column and alerts: cyan – watched call, magenta – new entity, light pink – new entity on band, purple – unconfirmed entity, light purple – unconfirmed on band, **amber** – none of these. **POTA** has a green line and a green outline (tooltip: park and its name; the same call in the cluster and POTA is shown as POTA). **Clicking a call or its line** tunes the radio exactly to the station, puts the call (for POTA also the park) in the logbook form and opens the LOG tab; clicking another station replaces the call. Turning off: DISPLAY tab → **Stations on the scope**.
+• Call signs above the spectrum line are **DX Cluster spots** and **POTA activations** (rows chosen so they do not overlap). **Label background** as the FT8 colours, the DXCC column and alerts: cyan – watched call, magenta – new entity, light pink – new entity on band, purple – unconfirmed entity, light purple – unconfirmed on band, **amber** – none of these. **POTA** has a green line and a green outline (tooltip: park and its name; the same call in the cluster and POTA is shown as POTA). **Clicking a call or its line** tunes the radio exactly to the station, puts the call (for POTA also the park) in the logbook form and opens the LOG tab; clicking another station replaces the call. Turning off: **Configuration (⌘,) → Scope and waterfall** → **Stations on the scope**.
 • **Scrolling:** drag the spectrum left/right with the mouse, swipe sideways with two fingers on a trackpad, or use Shift + mouse wheel. The **plain wheel** over the scope tunes the radio by the STEP (like the VFO knob). In CENTER mode the radio keeps the VFO in the middle of the scope, so scrolling retunes the VFO and the picture follows; in FIX mode the scope range stays put and only the VFO changes.
 • **Save frames** saves raw frames to the Desktop (for diagnosis), **Log** – the FT4222 connection log.
 • **Connection recovery:** when the scope loses sync with the radio (USB interference, long operation), the program reconnects by itself – with no attempt limit while the scope is on: intervals of 1, 2, 5, 10, then every 30 s, and every third attempt is a hardware reset of the FT4222 chip (the scope equivalent of restarting the radio). The state shows in the scope header; details – the **Log** button. Restarting the radio should no longer be needed.
@@ -315,7 +323,7 @@ The scope shows the same data as the radio's display, read through the built-in 
 
         HelpTopic(id: "display", icon: "paintpalette", titlePL: "Ekran – kolory i tryb 3D", titleEN: "Display – colours and 3D mode",
                   bodyPL: """
-Zakładka **EKRAN** zmienia wygląd skopu RF. Zmiany widać od razu na skopie i są zapamiętywane.
+**Konfiguracja (⌘,) → Skop i wodospad** zmienia wygląd skopu RF. Zmiany widać od razu na skopie i są zapamiętywane.
 
 **Kolory waterfalla:** Klasyczna, **Turbo (SDR)** (granatowy szum, sygnały od zieleni do czerwieni – jak w nowoczesnych programach SDR), **Inferno** (fiolet → pomarańcz → biel), Ogień, Morska, Zielony fosfor, Tęcza, Skala szarości – kliknij podgląd palety. Zmiana przemalowuje od razu całą historię waterfalla. „Ta sama paleta dla widma audio” stosuje ją też w zakładce WIDMO AUDIO.
 **Nowoczesny skop:** **Wypełnienie kolorami palety** (ramka Linia widma) – pod linią widma kolory palety waterfalla według poziomu, jak w programach SDR. **Peak hold** – cienka, jasna linia szczytów, powoli opadająca (ok. 6 s), od nowa po strojeniu i zmianie zakresu. W ramce **Na skopie**: **Skala dB** z lewej strony widma (0 dB = góra skali, kreski co 10 dB – względnie, bo radio nie podaje poziomów w dBm), **Znaczniki czasu (UTC)** na waterfallu co kilka sekund (odstęp dobierany do prędkości przesuwu) i **Plan pasma** – pasek pod waterfallem z odcinkami IARU Region 1: CW, cyfrowe, SSB, radiolatarnie, FT8 (+3 kHz od częstotliwości wybierania) oraz pasma radiofonii. Waterfall skopu RF ma pełną rozdzielczość radia (850 punktów) i dłuższą historię. Widok całego zakresu 0–64 MHz, jak w odbiornikach SDR, nie jest możliwy – FT-710 podaje tylko dane swojego skopu.
@@ -334,7 +342,7 @@ Zakładka **EKRAN** zmienia wygląd skopu RF. Zmiany widać od razu na skopie i 
 **Przywróć domyślne** – paleta klasyczna, tryb 2D, widmo 30% wysokości.
 """,
                   bodyEN: """
-The **DISPLAY** tab changes how the RF scope looks. Changes appear on the scope immediately and are remembered.
+**Configuration (⌘,) → Scope and waterfall** changes how the RF scope looks. Changes appear on the scope immediately and are remembered.
 
 **Waterfall colours:** Classic, **Turbo (SDR)** (navy noise, signals from green to red – as in modern SDR programs), **Inferno** (purple → orange → white), Fire, Ocean, Green phosphor, Rainbow, Grayscale – click a palette preview. The change recolours the whole waterfall history at once. “Same palette for the audio spectrum” also applies it in the AUDIO SPECTRUM tab.
 **Modern scope:** **Fill with palette colours** (Spectrum trace box) – under the trace, the waterfall palette colours by level, as in SDR programs. **Peak hold** – a thin, bright line of peaks, slowly decaying (about 6 s), restarted after tuning and a range change. In the **On the scope** box: a **dB scale** on the left of the spectrum (0 dB = top of the scale, marks every 10 dB – relative, as the radio gives no dBm levels), **Time stamps (UTC)** on the waterfall every few seconds (the interval follows the scroll speed) and a **Band plan** – a strip under the waterfall with IARU Region 1 segments: CW, digital, SSB, beacons, FT8 (+3 kHz from the dial frequency) and broadcast bands. The RF scope waterfall has the radio's full resolution (850 points) and a longer history. A view of the whole 0–64 MHz range, as in SDR receivers, is not possible – the FT-710 only provides its own scope data.
@@ -1131,7 +1139,7 @@ The rules were checked against the official rules (CQ WPX 2025, SP DX Contest 20
                   bodyPL: """
 CAT Share pozwala innym programom sterować radiem przez tę aplikację (jedyny właściciel portu szeregowego).
 
-1. Zakładka **CAT SHARE** → włącz serwer rigctl `127.0.0.1:4532`. Stan przełączników (serwer, „Pozwól na PTT”) jest zapamiętywany – po ponownym uruchomieniu programu serwer włącza się sam.
+1. **Konfiguracja (⌘,) → CAT Share** → włącz serwer rigctl `127.0.0.1:4532`. Stan przełączników (serwer, „Pozwól na PTT”) jest zapamiętywany – po ponownym uruchomieniu programu serwer włącza się sam.
 2. W WSJT-X: Settings → Radio:
    • Rig: **Hamlib NET rigctl**, Network Server: **127.0.0.1:4532**
    • PTT Method: **CAT**, Mode: **Data/Pkt**, Split Operation: **Fake It** albo **Rig**
@@ -1145,7 +1153,7 @@ Rozłączenie programu w trakcie nadawania zawsze wysyła TX0. Limit czasu nadaw
                   bodyEN: """
 CAT Share lets other programs control the radio through this app (the only owner of the serial port).
 
-1. **CAT SHARE** tab → turn on the rigctl server `127.0.0.1:4532`. The switch states (server, “Allow PTT”) are remembered – after restarting the program the server turns on by itself.
+1. **Configuration (⌘,) → CAT Share** → turn on the rigctl server `127.0.0.1:4532`. The switch states (server, “Allow PTT”) are remembered – after restarting the program the server turns on by itself.
 2. In WSJT-X: Settings → Radio:
    • Rig: **Hamlib NET rigctl**, Network Server: **127.0.0.1:4532**
    • PTT Method: **CAT**, Mode: **Data/Pkt**, Split Operation: **Fake It** or **Rig**
@@ -1186,6 +1194,13 @@ macOS pyta o dostęp do mikrofonu przy pierwszym użyciu – zgoda jest potrzebn
 • **Pasek stanu** (na dole okna): ikona głośnika wycisza i odcisza odsłuch (poziom zostaje zapamiętany), suwak to ta sama głośność co w zakładce AUDIO; głośność jest zapamiętywana między uruchomieniami.
 • **Korektor nadawania (TX)** – 12 pasm (60, 100, 160, 250, 400, 630 Hz, 1; 1,4; 1,8; 2,3; 2,8; 3,3 kHz), ±12 dB, dla mikrofonu Maca i mikrofonu panelu zdalnego (dźwięk przez USB do radia). Gotowe ustawienia: **Płasko**, **DX – przebicie** (obcięte niskie, podbite 1,4–2,8 kHz – czytelność w szumie i pile-upie), **Rozmowa – pełny głos**, **Zawody**; ruszenie suwaka – „Własne”. Korektor zmienia barwę, nie głośność (całość ściszana o największe podbicie – nie przesteruje toru); poziom ustaw MIC GAIN w radiu. FT-710 ma własny korektor mikrofonu – na początek ustaw go płasko, żeby oba się nie sumowały. Sprawdzaj ALC i najlepiej odsłuch na drugim odbiorniku albo WebSDR.
 • **Samoczynne wznowienie odsłuchu:** gdy macOS zatrzyma dźwięk (np. po uśpieniu monitora z głośnikami, wybudzeniu Maca albo zmianie urządzeń audio), program sam uruchamia odsłuch od nowa – a z nim widmo audio i wodospad FT8, które karmi ten sam dźwięk. Dodatkowo co 5 s sprawdza, czy dźwięk z radia płynie. Nie trzeba ręcznie wyłączać i włączać odsłuchu.
+
+**Filtr odsłuchu** (zakładka **WIDMO AUDIO**)
+• **Filtr pasmowy na Macu:** stromy (od krawędzi do −85 dB w ok. 100 Hz), bez zniekształceń fazy, opóźnienie 16 ms. Działa tylko na to, co słychać – dekodery (FT8, PSK, RTTY, CW, SSTV) dostają pełny dźwięk.
+• **Ustawienia:** SSB 300–2700 Hz, SSB wąskie 400–2400 Hz, CW 500 / 200 / 100 Hz (wokół tonu CW, tego samego co APF), Dane 200–3000 Hz. **Przeciągnij żółte krawędzie** na widmie, żeby dopasować pasmo – poza nim widmo jest przyciemnione.
+• **Wycięcia:** **dwuklik** na widmie w miejscu gwizdu albo nośnej dodaje głębokie, wąskie (ok. 40 Hz) wycięcie – czerwona linia; ponowny dwuklik na niej usuwa wycięcie. Do 6 naraz; **Usuń wycięcia** – wszystkie.
+• **Na skopie RF** (główny wodospad) pasmo filtra jest zaznaczone żółtym pasem, a wycięcia czerwonymi liniami – w miejscu, gdzie leżą w eterze: w USB/DATA-U powyżej VFO, w LSB/DATA-L poniżej, w CW wokół VFO (według tonu CW ustawionego w radiu). W AM, FM i RTTY pasma nie widać.
+• Filtr pracuje przed redukcją szumu (NR Mac), więc ta działa już na oczyszczonym paśmie. Ustawienia są zapamiętywane.
 """,
                   bodyEN: """
 **AUDIO** tab:
@@ -1215,6 +1230,13 @@ macOS asks for microphone access on first use – permission is also needed to r
 • **Status bar** (at the bottom of the window): the speaker icon mutes and unmutes listening (the level is remembered), the slider is the same volume as in the AUDIO tab; the volume is remembered between launches.
 • **Transmit equalizer (TX)** – 12 bands (60, 100, 160, 250, 400, 630 Hz, 1, 1.4, 1.8, 2.3, 2.8, 3.3 kHz), ±12 dB, for the Mac microphone and the remote panel microphone (audio over USB to the radio). Presets: **Flat**, **DX – punch** (lows cut, 1.4–2.8 kHz boosted – readability in noise and pile-ups), **Ragchew – full voice**, **Contest**; moving a slider – “Custom”. The equalizer changes the tone, not the loudness (the whole is lowered by the largest boost – it does not overdrive the path); set the level with MIC GAIN in the radio. The FT-710 has its own microphone equalizer – start with it flat so the two do not add up. Watch ALC and preferably listen on a second receiver or a WebSDR.
 • **Automatic monitoring restart:** when macOS stops audio (e.g. after a monitor with speakers goes to sleep, after the Mac wakes or an audio device change), the program restarts monitoring itself – and with it the audio spectrum and the FT8 waterfall, which are fed by the same audio. It also checks every 5 s that audio from the radio is flowing. No need to turn monitoring off and on by hand.
+
+**Listening filter** (the **AUDIO SPECTRUM** tab)
+• **Band-pass filter on the Mac:** steep (from the edge to −85 dB in about 100 Hz), no phase distortion, 16 ms delay. It affects only what you hear – the decoders (FT8, PSK, RTTY, CW, SSTV) get the full audio.
+• **Presets:** SSB 300–2700 Hz, SSB narrow 400–2400 Hz, CW 500 / 200 / 100 Hz (around the CW tone, the same as APF), Data 200–3000 Hz. **Drag the yellow edges** on the spectrum to adjust the band – outside it the spectrum is dimmed.
+• **Notches:** **double-click** the spectrum at a whistle or carrier to add a deep, narrow (about 40 Hz) notch – a red line; double-click it again to remove it. Up to 6 at once; **Remove notches** – all of them.
+• **On the RF scope** (the main waterfall) the filter band is marked with a yellow strip and the notches with red lines – where they lie on the air: in USB/DATA-U above the VFO, in LSB/DATA-L below it, in CW around the VFO (by the CW tone set in the radio). In AM, FM and RTTY the band is not shown.
+• The filter works before noise reduction (NR Mac), so that one already works on the cleaned band. The settings are remembered.
 """),
 
         HelpTopic(id: "remote", icon: "iphone.radiowaves.left.and.right", titlePL: "Praca zdalna", titleEN: "Remote operation",
@@ -1224,7 +1246,7 @@ Sterowanie radiem z przeglądarki (iPhone, iPad, dowolny komputer).
 **Panel w przeglądarce**
 • **Układ**: na telefonie jedna kolumna; na iPadzie w poziomie i na komputerze skop szeroko po prawej, sterowanie po lewej.
 • **Język PL / EN** – przycisk w rogu (zapamiętany w przeglądarce); domyślnie język programu.
-• **Skop** ze strojeniem dotknięciem i **znakami stacji** z DX Cluster i POTA – te same kolory co na skopie w programie (obserwowany, nowy kraj, niepotwierdzony; POTA z zieloną obwódką); dotknięcie znaku stroi radio. Wyświetlanie zależy od przełączników „Stacje na skopie” w zakładce EKRAN.
+• **Skop** ze strojeniem dotknięciem i **znakami stacji** z DX Cluster i POTA – te same kolory co na skopie w programie (obserwowany, nowy kraj, niepotwierdzony; POTA z zieloną obwódką); dotknięcie znaku stroi radio. Wyświetlanie zależy od przełączników „Stacje na skopie” w **Konfiguracja → Skop i wodospad**.
 • **Pasma** pamiętają ostatnią częstotliwość i tryb (w tej przeglądarce); domyślnie fonia (LSB poniżej 10 MHz, USB powyżej), 30 m – CW.
 • **Radio**: ATT, IPO, AGC, moc (suwak), w CW prędkość klucza radia (KS); zwijane sekcje **Odbiór** (AF, RF, SQL, NB i DNR z poziomami, DNF), **Filtr** (NAR, szerokość, przesunięcie IF, notch i contour z częstotliwością), **Nadawanie** (MIC, PROC z poziomem, AMC), **Tuner i pamięci** (tuner, strojenie TUNE, komunikaty z pamięci radia M1–M5). Przy częstotliwości: VFO B, **A=B**, **A↔B**, **SPLIT**.
 • **Dziennik**: znak (dane z QRZ i „było: N QSO” jak w programie), RST (puste – domyślne dla trybu), imię, QTH, lokator, uwagi; częstotliwość i tryb z radia; zapis tą samą funkcją co w programie (wysyłka do serwisów według ustawień); lista ostatnich QSO.
@@ -1237,12 +1259,12 @@ Sterowanie radiem z przeglądarki (iPhone, iPad, dowolny komputer).
 • Podpowiedzi i test dźwięku – zwinięte pod „Pomoc i test dźwięku”.
 
 **Przez Tailscale (z nadawaniem)**
-1. Zakładka **ZDALNIE**: ustaw hasło (min. 8 znaków; przechowywane w pęku kluczy macOS, jak pozostałe hasła programu) i włącz serwer. Stan przełączników (serwer, nadawanie zdalne, sieć domowa) jest zapamiętywany – po ponownym uruchomieniu serwer włącza się sam; jeśli zostawisz „Pozwól na nadawanie zdalne”, operator z hasłem może nadawać od razu po starcie programu.
+1. **Konfiguracja (⌘,) → Praca zdalna**: ustaw hasło (min. 8 znaków; przechowywane w pęku kluczy macOS, jak pozostałe hasła programu) i włącz serwer. Stan przełączników (serwer, nadawanie zdalne, sieć domowa) jest zapamiętywany – po ponownym uruchomieniu serwer włącza się sam; jeśli zostawisz „Pozwól na nadawanie zdalne”, operator z hasłem może nadawać od razu po starcie programu.
 2. Jednorazowo w Terminalu: `tailscale serve --bg 8710`. Jeśli Terminal odpowiada „command not found: tailscale”, aplikacja Tailscale nie dodała polecenia do ścieżki – użyj pełnej ścieżki: `/Applications/Tailscale.app/Contents/MacOS/Tailscale serve --bg 8710`, albo (wersja Standalone) zainstaluj polecenie w ustawieniach aplikacji Tailscale (integracja z wierszem poleceń), albo dodaj do `~/.zshrc` alias: `alias tailscale="/Applications/Tailscale.app/Contents/MacOS/Tailscale"`.
 3. Na telefonie z Tailscale otwórz `https://<nazwa-maca>.<tailnet>.ts.net`, podaj hasło, dotknij „Włącz audio”.
 4. Nadawanie wymaga na stacji zaznaczenia **Pozwól na nadawanie zdalne**.
 
-**Przez internet bez Tailscale – tunel Cloudflare** (zakładka ZDALNIE)
+**Przez internet bez Tailscale – tunel Cloudflare** (Konfiguracja → Praca zdalna)
 • Telefon potrzebuje tylko przeglądarki (Safari) – bez aplikacji i konta. Na Macu jednorazowo w Terminalu: `brew install cloudflared` (bezpłatny program Cloudflare).
 • Hasło pracy zdalnej musi mieć co najmniej **12 znaków** (adres jest publiczny). **Uruchom tunel** – po chwili pojawia się adres `https://….trycloudflare.com` z **kodem QR** (zeskanuj aparatem iPhone'a), **Kopiuj** i **Otwórz**. Opcja „Uruchamiaj razem z pracą zdalną”.
 • Połączenie jest szyfrowane (HTTPS): działa mikrofon, PTT i nadawanie – na tych samych warunkach co przez Tailscale. Po 5 błędnych hasłach logowanie jest blokowane na 1 min, przy kolejnych seriach na 5 min, 15 min i 1 h.
@@ -1262,7 +1284,7 @@ Control the radio from a browser (iPhone, iPad, any computer).
 **The browser panel**
 • **Layout**: one column on a phone; on an iPad in landscape and on a computer the scope is wide on the right and the controls on the left.
 • **Language PL / EN** – a button in the corner (remembered in the browser); by default the program's language.
-• **Scope** with tap-to-tune and **station calls** from DX Cluster and POTA – the same colours as on the program's scope (watched, new entity, unconfirmed; POTA with a green outline); tapping a call tunes the radio. Display depends on the “Stations on the scope” switches in the DISPLAY tab.
+• **Scope** with tap-to-tune and **station calls** from DX Cluster and POTA – the same colours as on the program's scope (watched, new entity, unconfirmed; POTA with a green outline); tapping a call tunes the radio. Display depends on the “Stations on the scope” switches in **Configuration → Scope and waterfall**.
 • **Bands** remember the last frequency and mode (in this browser); by default phone (LSB below 10 MHz, USB above), 30 m – CW.
 • **Radio**: ATT, IPO, AGC, power (slider), in CW the radio's key speed (KS); collapsible sections **Receive** (AF, RF, SQL, NB and DNR with levels, DNF), **Filter** (NAR, width, IF shift, notch and contour with frequency), **Transmit** (MIC, PROC with level, AMC), **Tuner and memories** (tuner, TUNE, radio memory messages M1–M5). Next to the frequency: VFO B, **A=B**, **A↔B**, **SPLIT**.
 • **Log**: call (QRZ data and “worked: N QSOs” as in the program), RST (empty – the mode default), name, QTH, locator, comment; frequency and mode from the radio; saved by the same function as in the program (upload to services per settings); a list of recent QSOs.
@@ -1275,12 +1297,12 @@ Control the radio from a browser (iPhone, iPad, any computer).
 • Hints and the sound test – collapsed under “Help and sound test”.
 
 **Via Tailscale (with transmit)**
-1. **REMOTE** tab: set a password (min. 8 characters; stored in the macOS Keychain, like the program's other passwords) and turn the server on. The switch states (server, remote transmit, home network) are remembered – after restarting the program the server turns on by itself; if you leave “Allow remote transmit” on, an operator with the password can transmit right after the program starts.
+1. **Configuration (⌘,) → Remote operation**: set a password (min. 8 characters; stored in the macOS Keychain, like the program's other passwords) and turn the server on. The switch states (server, remote transmit, home network) are remembered – after restarting the program the server turns on by itself; if you leave “Allow remote transmit” on, an operator with the password can transmit right after the program starts.
 2. Once in Terminal: `tailscale serve --bg 8710`. If Terminal answers “command not found: tailscale”, the Tailscale app did not add the command to the path – use the full path: `/Applications/Tailscale.app/Contents/MacOS/Tailscale serve --bg 8710`, or (Standalone version) install the command in the Tailscale app settings (command-line integration), or add an alias to `~/.zshrc`: `alias tailscale="/Applications/Tailscale.app/Contents/MacOS/Tailscale"`.
 3. On a phone with Tailscale open `https://<mac-name>.<tailnet>.ts.net`, enter the password, tap “Włącz audio” (the browser page is currently in Polish only).
 4. Transmit requires **Allow remote transmit** at the station.
 
-**Over the internet without Tailscale – Cloudflare tunnel** (REMOTE tab)
+**Over the internet without Tailscale – Cloudflare tunnel** (Configuration → Remote operation)
 • The phone only needs a browser (Safari) – no app and no account. On the Mac, once in Terminal: `brew install cloudflared` (a free Cloudflare program).
 • The remote password must have at least **12 characters** (the address is public). **Start the tunnel** – after a moment the `https://….trycloudflare.com` address appears with a **QR code** (scan it with the iPhone camera), **Copy** and **Open**. Option “Start together with remote operation”.
 • The connection is encrypted (HTTPS): the microphone, PTT and transmitting work – on the same conditions as via Tailscale. After 5 wrong passwords login is blocked for 1 min, for further series 5 min, 15 min and 1 h.
@@ -1333,7 +1355,7 @@ iPhone: if you hear nothing, check the volume; the page also tries to play in si
                   bodyPL: """
 **„Brak odpowiedzi” po połączeniu** – wybierz drugi port z pary, sprawdź CAT RATE = 38400 w radiu i prędkość w pasku stanu.
 
-**Skop: „Nie znaleziono libft4222.dylib”** – zainstaluj obie biblioteki FTDI (libft4222 i libftd2xx) w `/usr/local/lib` i zdejmij kwarantannę (`xattr`). **„Nie można otworzyć FT4222”** – SCU-LAN10 = ON, ponowne podłączenie USB, żaden inny program nie używa skopu.
+**Skop: „Nie znaleziono libft4222.dylib”** – w programie z obrazu .dmg biblioteki są wbudowane: pobierz program ponownie z GitHuba. Przy programie zbudowanym ze źródeł zainstaluj obie biblioteki FTDI (libft4222 i libftd2xx) w `/usr/local/lib` i zdejmij kwarantannę (`xattr`). **„Nie można otworzyć FT4222”** – SCU-LAN10 = ON, ponowne podłączenie USB, żaden inny program nie używa skopu.
 
 **macOS pyta o hasło do pęku kluczy (QRZ)** – kliknij „Zawsze pozwalaj”. Po każdej nowej kompilacji programu macOS pyta ponownie (traktuje ją jak nowy program).
 
@@ -1357,7 +1379,7 @@ iPhone: if you hear nothing, check the volume; the page also tries to play in si
                   bodyEN: """
 **“No response” after connecting** – choose the other port of the pair, check CAT RATE = 38400 on the radio and the speed in the status bar.
 
-**Scope: “libft4222.dylib not found”** – install both FTDI libraries (libft4222 and libftd2xx) in `/usr/local/lib` and remove the quarantine flag (`xattr`). **“Cannot open the FT4222”** – SCU-LAN10 = ON, replug USB, no other program is using the scope.
+**Scope: “libft4222.dylib not found”** – in the program from the .dmg image the libraries are built in: download the program again from GitHub. For a program built from source install both FTDI libraries (libft4222 and libftd2xx) in `/usr/local/lib` and remove the quarantine flag (`xattr`). **“Cannot open the FT4222”** – SCU-LAN10 = ON, replug USB, no other program is using the scope.
 
 **macOS asks for the Keychain password (QRZ)** – click “Always Allow”. After every new build macOS asks again (it treats it as a new program).
 

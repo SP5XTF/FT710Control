@@ -64,11 +64,8 @@ struct ContentView: View {
         case pota = "POTA"
         case contest = "ZAWODY"
         case propagation = "PROPAGACJA"
-        case display = "EKRAN"
         case audio = "AUDIO"
         case spectrum = "WIDMO AUDIO"
-        case catShare = "CAT SHARE"
-        case remote = "ZDALNIE"
         var id: String { rawValue }
     }
 
@@ -267,16 +264,14 @@ struct ContentView: View {
     /// i opcjonalnie tryb. Spoty spoza pasm FT-710 są pomijane.
     private func tuneToSpot(_ spot: DXSpot) {
         guard cat.isConnected, Bands.name(for: spot.frequencyHz) != nil else { return }
-        cat.setActiveFrequency(spot.tuneHz)
         let setsMode = UserDefaults.standard.object(forKey: "clusterSetsMode") as? Bool ?? true
-        if setsMode, cat.modeCode != spot.radioModeCode { cat.setMode(spot.radioModeCode) }
+        cat.tune(hz: spot.tuneHz, mode: setsMode ? spot.radioModeCode : nil)
     }
 
     /// Aktywacja POTA ze skopu w zakładce ZAWODY: tylko strojenie i tryb (znak trafia do pola zawodów).
     private func tuneToSpot(potaSpot spot: POTASpot) {
         guard cat.isConnected else { return }
-        cat.setActiveFrequency(spot.frequencyHz)
-        if let code = POTAManager.radioMode(for: spot), cat.modeCode != code { cat.setMode(code) }
+        cat.tune(hz: spot.frequencyHz, mode: POTAManager.radioMode(for: spot))
     }
 
     /// Spot w polu komendy DX Cluster: zakładka klastra na wierzchu, nic nie jest wysyłane bez Twojej decyzji.
@@ -345,16 +340,14 @@ struct ContentView: View {
     }
 
     private func selectBand(_ item: BandButton) {
-        cat.setActiveFrequency(item.hz)
         let sideband = Self.sideband(for: item.hz)
+        let mode: String?
         switch bandModePolicy {
-        case "ssb":
-            if cat.modeCode != sideband { cat.setMode(sideband) }
-        case "sideband":
-            if ["1", "2"].contains(cat.modeCode), cat.modeCode != sideband { cat.setMode(sideband) }
-        default:
-            break
+        case "ssb": mode = sideband
+        case "sideband": mode = ["1", "2"].contains(cat.modeCode) ? sideband : nil
+        default: mode = nil
         }
+        cat.tune(hz: item.hz, mode: mode)                           // najpierw tryb, potem częstotliwość
     }
 
     private func bandPolicyItem(_ value: String, _ title: String) -> some View {
@@ -531,11 +524,8 @@ struct ContentView: View {
         case .pota: return L("Aktywacje Parks on the Air")
         case .contest: return L("Tryb zawodów – osobny log, punkty, duble")
         case .propagation: return L("Prognozy i mapy propagacji")
-        case .display: return L("Wygląd skopu i waterfalla")
         case .audio: return L("Urządzenia dźwiękowe, odsłuch, redukcja szumu, korektory")
         case .spectrum: return L("Widmo i waterfall dźwięku z radia")
-        case .catShare: return L("Serwer CAT dla innych programów (WSJT-X, JS8Call…)")
-        case .remote: return L("Praca zdalna z przeglądarki (telefon, tablet, komputer)")
         }
     }
 
@@ -685,7 +675,9 @@ struct ContentView: View {
                             }
                         },
                         contest: contestHolder.manager,
-                        contestActive: tab == .contest)
+                        contestActive: tab == .contest,
+                        listeningFilter: audio.listeningFilter,
+                        cwPitchHz: cat.cwPitchHz)
                 .equatable()
             }
         }
@@ -1011,8 +1003,6 @@ struct ContentView: View {
             Group {
                 switch tab {
                 case .log: logTab
-                case .display:
-                    DisplayView(display: DisplaySettings.shared)
                 case .cw:
                     CWView(cw: cwHolder.manager, audio: audio, cat: cat, txArmed: txArmed)
                 case .rtty:
@@ -1039,13 +1029,11 @@ struct ContentView: View {
                 case .audio: scrollingTab { audioSection }
                 case .spectrum:
                     scrollingTab {
-                        SpectrumView(model: audio.spectrum, dialHz: cat.activeFreq,
+                        SpectrumView(model: audio.spectrum, audio: audio, filter: audio.listeningFilter, dialHz: cat.activeFreq,
                                      modeCode: cat.modeCode, receiving: audio.listening)
                             .onAppear { audio.setSpectrumNeeded("audioTab", true) }
                             .onDisappear { audio.setSpectrumNeeded("audioTab", false) }
                     }
-                case .catShare: scrollingTab { catShareSection }
-                case .remote: scrollingTab { RemoteSectionView(remote: remote) }
                 }
             }
             .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity, alignment: .topLeading)
@@ -1292,10 +1280,6 @@ struct ContentView: View {
             }
             .padding(6)
         }
-    }
-
-    private var catShareSection: some View {
-        CATShareSection(share: share)
     }
 
     private func devicePicker(_ title: String,

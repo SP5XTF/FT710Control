@@ -139,6 +139,23 @@ final class CATClient: ObservableObject {
     /// Strojenie aktywnego VFO.
     func setActiveFrequency(_ hz: Int) { setFrequency(vfo: activeVFO, hz: hz) }
 
+    /// Strojenie z trybem (spot klastra, POTA, pasma emisji, FT8, panel zdalny): NAJPIERW tryb, potem częstotliwość.
+    /// FT-710 przy zmianie trybu przesuwa VFO (np. SSB↔CW o ton CW), więc częstotliwość ustawiona przed zmianą
+    /// trybu była potem odstrojona - „za pierwszym razem źle, za drugim dobrze”. Po zmianie trybu częstotliwość
+    /// jest wysyłana jeszcze raz po 0,3 s, gdy radio skończy przełączanie.
+    func tune(hz: Int, mode: String?) {
+        guard let mode, mode != modeCode else {
+            setActiveFrequency(hz)
+            return
+        }
+        setMode(mode)
+        setActiveFrequency(hz)
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: 300_000_000)
+            self?.setActiveFrequency(hz)
+        }
+    }
+
     private func requestVFOSelect() -> String {
         if vfoSelectAnswered { vfoSelectUnanswered = 0 } else { vfoSelectUnanswered += 1 }
         vfoSelectAnswered = false
@@ -156,6 +173,8 @@ final class CATClient: ObservableObject {
     private var txWatchdog: Task<Void, Never>?
 
     var modeName: String { RadioMode.names[modeCode] ?? "—" }
+    /// Ton CW ustawiony w radiu (KP); radio bez tej komendy - 700 Hz (domyślny FT-710).
+    var cwPitchHz: Double { value(.keyPitch).map { 300 + 10 * Double($0) } ?? 700 }
 
     init() {
         let savedPort = UserDefaults.standard.string(forKey: Self.savedPortKey) ?? ""

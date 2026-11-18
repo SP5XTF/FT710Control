@@ -50,7 +50,11 @@ final class AudioDenoiser: @unchecked Sendable {
         var aiStrength = 0.7                              // AI: udział wyniku sieci (reszta - oryginał)
         var eq = false                                    // korektor 8-pasmowy
         var eqGains: [Double] = [0, 0, 0, 0, 0, 0, 0, 0]
-        var active: Bool { level != .off || voiceBand || anf || nb || apf || eq }
+        var band = false                                  // filtr pasmowy odsłuchu (FIR, liniowa faza)
+        var bandLow = 300.0
+        var bandHigh = 2700.0
+        var notches: [Double] = []                        // wycięcia ręczne (Hz)
+        var active: Bool { level != .off || voiceBand || anf || nb || apf || eq || band || !notches.isEmpty }
         /// Filtr Wienera (poziomy 1–4) albo pasmo głosu - etap widmowy (STFT).
         var spectral: Bool { (level != .off && level != .ai) || voiceBand }
     }
@@ -120,7 +124,8 @@ final class AudioDenoiser: @unchecked Sendable {
         if wanted.spectral, !config.spectral { resetSpectral() }
         config = wanted
 
-        // Łańcuch: NB → ANF → AI (RNNoise) → APF → widmowy filtr / pasmo głosu → korektor → wyrównanie głośności
+        // Łańcuch: NB → ANF → AI (RNNoise) → APF → filtr pasmowy → wycięcia → widmowy filtr / pasmo głosu →
+        // korektor → wyrównanie głośności
         if config.nb { blanker?.process(samples, count: count) }
         if config.anf { notch?.process(samples, count: count) }
         if config.level == .ai { neural?.process(samples, count: count, strength: Float(config.aiStrength)) }   // RNNoise tylko przy 48 kHz
@@ -130,6 +135,15 @@ final class AudioDenoiser: @unchecked Sendable {
             apfFilter.process(samples, count: count)
         }
         apfRunning = config.apf
+        // filtr pasmowy i wycięcia ręczne - przed redukcją szumu (pracuje na oczyszczonym paśmie)
+        if config.band {
+            if !bandRunning { listening.resetBand() }
+            listening.processBand(samples, count: count, low: config.bandLow, high: config.bandHigh, rate: sampleRate)
+        }
+        bandRunning = config.band
+        if !config.notches.isEmpty {
+            listening.processNotches(samples, count: count, frequencies: config.notches, rate: sampleRate)
+        }
         if config.spectral { spectralStage(samples, count: count) }
         if config.eq { equalizer.process(samples, count: count, gains: config.eqGains, sampleRate: sampleRate) }
         if config.agc, config.level != .off { applyAGC(samples, count: count) }
@@ -170,6 +184,8 @@ final class AudioDenoiser: @unchecked Sendable {
     private var apfFilter = Biquad()
     private var equalizer = AudioEqualizer()
     private var apfRunning = false
+    private let listening = ListeningFilters()
+    private var bandRunning = false
     private var blanker: ImpulseBlanker?
     private var notch: AdaptiveNotch?
     private var neural: NeuralDenoiser?

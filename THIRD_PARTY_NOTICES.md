@@ -1,11 +1,12 @@
 # Licencje komponentów zewnętrznych
 
 FT-710 Control jest wydany na licencji GNU GPL v3.0 (plik LICENSE). Poniższe komponenty mają licencje
-zgodne z GPL-3 (MIT, BSD, Apache 2.0). Biblioteka FTDI LibFT4222 nie jest dołączona do programu – instaluje
-ją użytkownik (opis w pomocy).
+zgodne z GPL-3 (MIT, BSD, Apache 2.0). Aplikacja w obrazie .dmg zawiera biblioteki FTDI D2XX i LibFT4222
+(licencja FTDI, opis niżej) – na podstawie dodatkowego zezwolenia do GPL-3 (sekcja „Wyjątek GPL-3”).
 
 FT-710 Control is released under the GNU GPL v3.0 (LICENSE file). The components below have licences
-compatible with GPL-3 (MIT, BSD, Apache 2.0). The FTDI LibFT4222 library is not included – the user installs it.
+compatible with GPL-3 (MIT, BSD, Apache 2.0). The application in the .dmg image includes the FTDI D2XX and
+LibFT4222 libraries (FTDI licence, see below) – under an additional permission to GPL-3 (section "GPL-3 exception").
 
 ## RigControl Web – protokół skopu FT-710
 
@@ -190,10 +191,43 @@ wyszukiwanie biblioteki w typowych katalogach macOS i wsparcie osobnej libftd2xx
 
    END OF TERMS AND CONDITIONS
 
-## FTDI LibFT4222
+## FTDI D2XX i LibFT4222 – skop RF (układ FT4222 w FT-710)
 
-Biblioteka LibFT4222 nie jest dołączona do projektu. Użytkownik pobiera ją ze strony FTDI
-i instaluje samodzielnie; jej użycie podlega licencji FTDI.
+Aplikacja w obrazie .dmg zawiera biblioteki libftd2xx.dylib (D2XX) i libft4222.dylib (LibFT4222)
+firmy Future Technology Devices International Limited (FTDI), bez zmian w ich kodzie (zmienione są
+tylko ścieżki ładowania wewnątrz aplikacji). Kod źródłowy FT-710 Control (repozytorium) ich nie zawiera.
+
+    Copyright © Future Technology Devices International Limited
+    Licence terms: https://ftdichip.com/driver-licence-terms-details/
+
+Biblioteki mogą być używane wyłącznie z oryginalnymi układami FTDI („Genuine FTDI Components”) –
+w tym programie z układem FT4222 radia Yaesu FT-710. Oprogramowanie FTDI jest dostarczane „tak jak jest”.
+
+FTDI wyraziło zgodę na dołączenie bibliotek do FT-710 Control (e-mail, 18.11.2026) pod warunkiem
+dołączenia warunków licencji: pełny tekst licencji FTDI jest w aplikacji obok bibliotek
+(Contents/Frameworks/FTDI-Driver-Licence.txt) i w obrazie .dmg (plik „Licencja FTDI - FTDI Licence.txt”).
+Najnowsze wersje bibliotek: ftdichip.com.
+
+FTDI has given permission to include the libraries with FT-710 Control (e-mail, 18 Nov 2026) on condition
+that the licence terms are included: the full FTDI licence text is inside the application next to the
+libraries and in the .dmg image. The latest library versions are available at ftdichip.com.
+
+The application in the .dmg image includes the FTDI libraries libftd2xx.dylib (D2XX) and
+libft4222.dylib (LibFT4222), unmodified (only their load paths inside the application are changed).
+They may be used only with Genuine FTDI Components – here the FT4222 chip of the Yaesu FT-710.
+The FT-710 Control source code (repository) does not contain them.
+
+## Wyjątek GPL-3 / GPL-3 exception
+
+Dodatkowe zezwolenie na podstawie sekcji 7 licencji GNU GPL w wersji 3: jeśli zmodyfikujesz ten
+program albo dowolne dzieło nim objęte, łącząc je lub zestawiając z bibliotekami FTDI D2XX i LibFT4222
+(albo ich zmodyfikowanymi wersjami), zawierającymi części objęte licencją FTDI, licencjodawcy tego
+programu udzielają Ci dodatkowego zezwolenia na przekazywanie tak powstałego dzieła.
+
+Additional permission under GNU GPL version 3 section 7: If you modify this Program, or any covered
+work, by linking or combining it with the FTDI D2XX and LibFT4222 libraries (or a modified version of
+those libraries), containing parts covered by the terms of the FTDI Driver Licence, the licensors of
+this Program grant you additional permission to convey the resulting work.
 
 
 ---
