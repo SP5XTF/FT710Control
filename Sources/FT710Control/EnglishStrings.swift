@@ -1643,5 +1643,13 @@ let englishStrings: [String: String] = [
     "Jeden plik do zgłoszenia błędu na GitHubie (bez haseł).": "One file for a bug report on GitHub (no passwords).",
     "Konfiguracja…": "Configuration…",
     "Konfiguracja": "Configuration",
-    "Zapisano": "Saved"
+    "Zapisano": "Saved",
+    "CW – kluczowanie": "CW – keying",
+    "Węzeł DX Cluster (adres, port, logowanie), automatyczne łączenie i filtry spotów. Lista spotów i łączenie - zakładka DX CLUSTER.": "DX Cluster node (address, port, login), automatic connection and spot filters. The spot list and connecting – the DX CLUSTER tab.",
+    "Zachowanie sekwencji FT8/FT4 (limit wywołań, kolejność wołających, praca split) i zgłaszanie odebranych stacji do PSKReporter.": "FT8/FT4 sequence behaviour (call limit, caller order, split operation) and reporting received stations to PSKReporter.",
+    "Jak program nadaje CW: przez linię portu (DTR/RTS, dokładne tempo) albo przez klucz radia; sprawdzenie i poprawienie ustawień FT-710.": "How the program sends CW: through a port line (DTR/RTS, exact timing) or through the radio's keyer; checking and correcting the FT-710 settings.",
+    "Węzeł": "Node",
+    "Filtry spotów": "Spot filters",
+    "Zgłaszaj odebrane stacje do PSKReporter": "Report received stations to PSKReporter",
+    "PTT trzyma inny program - radio nadaje dalej": "Another program holds PTT – the radio keeps transmitting"
 ]

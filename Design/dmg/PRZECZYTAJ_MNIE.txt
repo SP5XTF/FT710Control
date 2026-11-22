@@ -91,16 +91,13 @@ e) WSJT-X / JTDX (opcjonalnie):
 
 6. CO NOWEGO W TEJ WERSJI - warto sprawdzić
 -------------------------------------------
-- Skop RF działa od razu: biblioteki FTDI są wbudowane w program (nic nie trzeba instalować).
-- Konfiguracja (Cmd-,): wszystkie ustawienia w jednym oknie z opisami - stacja, radio i CAT, skop
-  i wodospad, dziennik i serwisy, alerty, CAT Share, praca zdalna, program. Dawne zakładki EKRAN,
-  CAT SHARE i ZDALNIE są teraz działami Konfiguracji.
-- Filtr odsłuchu (zakładka WIDMO AUDIO): stromy filtr pasmowy na Macu (SSB, CW 500/200/100 Hz,
-  dane), przeciąganie krawędzi, wycięcia dwuklikiem; pasmo i wycięcia widać też na skopie RF.
-- Strojenie ze spotów klastra, POTA i przycisków pasm trafia od razu (wcześniej przy zmianie trybu
-  bywało odstrojone za pierwszym razem); kliknięcie w skop z dokładnością 10 Hz.
-- Wcześniej (0.9.4-0.9.5): PSK31/PSK63, pomiar SWR anteny, mapa „Kto mnie słyszy”, układ dla
-  MacBooka, ręczne dodawanie QSO, kopia ustawień, raport diagnostyczny.
+- Konfiguracja (Cmd-,) ma nowe działy: DX Cluster (węzeł, logowanie, filtry), FT8/FT4 (opcje
+  sekwencji, PSKReporter) i CW - kluczowanie (linia portu albo klucz radia, sprawdzenie radia).
+- CAT Share: kilka programów naraz bez przerywania sobie nadawania - radio przestaje nadawać
+  dopiero, gdy żaden program nie trzyma PTT; „PTT wyłącz” z innego programu nie przerwie też FT8,
+  RTTY czy pomiaru SWR w FT-710 Control.
+- Wcześniej (0.9.6): skop RF bez instalowania (wbudowane biblioteki FTDI), okno Konfiguracja,
+  filtr odsłuchu z wycięciami, poprawione strojenie ze spotów klastra i POTA.
 
 7. ZGŁASZANIE BŁĘDÓW
 --------------------

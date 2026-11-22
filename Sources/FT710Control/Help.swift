@@ -106,7 +106,7 @@ Polski / English wybierasz w pasku stanu. Zmiana działa od razu, bez rozłącza
 • **Wąskie okno** (od 1280 pt – mieści się na MacBooku Air bez zewnętrznego monitora): VFO-B pokazuje się jednym wierszem pod VFO-A (częstotliwość, tryb, TX przy SPLIT), a zakładki, które się nie mieszczą, są w menu **WIĘCEJ ▾** na końcu paska (wybrana pokazuje tam swoją nazwę).
 
 **Konfiguracja** (menu programu → **Konfiguracja…**, ⌘,)
-• Wszystkie ustawienia w jednym oknie, z opisem każdego działu: **Stacja** (profil, konta QRZ/HamQTH), **Radio i CAT** (port, prędkość, automatyczne łączenie, limit czasu nadawania), **Skop i wodospad**, **Dziennik i serwisy** (LoTW, eQSL, QRZ, Club Log, HRDLog, WRL), **Alerty**, **CAT Share**, **Praca zdalna** (z tunelem Cloudflare) i **Program** (język, aktualizacje, kopia ustawień, raport diagnostyczny).
+• Wszystkie ustawienia w jednym oknie, z opisem każdego działu: **Stacja** (profil, konta QRZ/HamQTH), **Radio i CAT** (port, prędkość, automatyczne łączenie, limit czasu nadawania), **Skop i wodospad**, **DX Cluster** (węzeł, logowanie, filtry), **FT8/FT4** (opcje sekwencji, PSKReporter), **CW – kluczowanie** (linia portu albo klucz radia, sprawdzenie radia), **Dziennik i serwisy** (LoTW, eQSL, QRZ, Club Log, HRDLog, WRL), **Alerty**, **CAT Share**, **Praca zdalna** (z tunelem Cloudflare) i **Program** (język, aktualizacje, kopia ustawień, raport diagnostyczny).
 • Dawne zakładki EKRAN, CAT SHARE i ZDALNIE są teraz działami Konfiguracji. Ustawienia pracy (np. opcje FT8, kluczowanie CW, filtry DSP) zostają też w zakładkach, gdzie są potrzebne przy pracy.
 """,
                   bodyEN: """
@@ -135,7 +135,7 @@ Polski / English is selected in the status bar. The change is immediate and does
 • **Narrow window** (from 1280 pt – fits a MacBook Air without an external monitor): VFO-B is shown as one row under VFO-A (frequency, mode, TX with SPLIT), and tabs that do not fit are in the **MORE ▾** menu at the end of the bar (the selected one shows its name there).
 
 **Configuration** (program menu → **Configuration…**, ⌘,)
-• All settings in one window, with a description of each section: **Station** (profile, QRZ/HamQTH accounts), **Radio and CAT** (port, speed, automatic connection, transmit time limit), **Scope and waterfall**, **Log and services** (LoTW, eQSL, QRZ, Club Log, HRDLog, WRL), **Alerts**, **CAT Share**, **Remote operation** (with the Cloudflare tunnel) and **Program** (language, updates, settings backup, diagnostic report).
+• All settings in one window, with a description of each section: **Station** (profile, QRZ/HamQTH accounts), **Radio and CAT** (port, speed, automatic connection, transmit time limit), **Scope and waterfall**, **DX Cluster** (node, login, filters), **FT8/FT4** (sequence options, PSKReporter), **CW – keying** (port line or the radio's keyer, radio check), **Log and services** (LoTW, eQSL, QRZ, Club Log, HRDLog, WRL), **Alerts**, **CAT Share**, **Remote operation** (with the Cloudflare tunnel) and **Program** (language, updates, settings backup, diagnostic report).
 • The former DISPLAY, CAT SHARE and REMOTE tabs are now Configuration sections. Operating settings (e.g. FT8 options, CW keying, DSP filters) also stay in the tabs where they are needed while operating.
 """),
 
@@ -1149,6 +1149,10 @@ CAT Share pozwala innym programom sterować radiem przez tę aplikację (jedyny 
 Rozłączenie programu w trakcie nadawania zawsze wysyła TX0. Limit czasu nadawania obowiązuje także tutaj.
 • **Inne programy (RUMlogNG, loggery):** w ustawieniach radia wybierz model **„Hamlib NET rigctl”**, host 127.0.0.1, port 4532 – **nie** „Yaesu FT-710” (ten model wysyła natywne komendy CAT radia, których serwer nie rozumie; log CAT Share pokaże wtedy wskazówkę). Odpytywanie co ok. 500 ms wystarczy.
 • Obsługiwany jest też **rozszerzony format rigctld** (polecenia z przedrostkiem `+`, `;`, `|` albo `,`, np. `+f`), którego używają nowsze loggery Hamlib – odpowiedzi z nazwami pól jak w oryginalnym rigctld.
+
+**Kilka programów naraz**
+• CAT Share nie ma limitu połączeń – np. WSJT-X, JTDX, program logujący i GridTracker mogą być podłączone jednocześnie. Wszystkie sterują tym samym radiem: zmiana pasma czy trybu w jednym zmienia je dla wszystkich.
+• **PTT:** każdy program wyłącza tylko swoje nadawanie. Radio przestaje nadawać dopiero, gdy żaden podłączony program nie trzyma PTT – „PTT wyłącz” z innego programu nie przerwie nadawania (ani programu zewnętrznego, ani FT8, RTTY czy pomiaru SWR w FT-710 Control). Rozłączenie programu zwalnia jego PTT.
 """,
                   bodyEN: """
 CAT Share lets other programs control the radio through this app (the only owner of the serial port).
@@ -1163,6 +1167,10 @@ CAT Share lets other programs control the radio through this app (the only owner
 A program disconnecting while transmitting always triggers TX0. The transmit time limit applies here too.
 • **Other programs (RUMlogNG, loggers):** in the rig settings choose the model **“Hamlib NET rigctl”**, host 127.0.0.1, port 4532 – **not** “Yaesu FT-710” (that model sends the radio's native CAT commands, which the server does not understand; the CAT Share log will then show a hint). Polling about every 500 ms is enough.
 • The **extended rigctld format** is supported too (commands prefixed with `+`, `;`, `|` or `,`, e.g. `+f`), used by newer Hamlib loggers – replies with field names as in the original rigctld.
+
+**Several programs at once**
+• CAT Share has no connection limit – e.g. WSJT-X, JTDX, a logging program and GridTracker can be connected at the same time. They all control the same radio: a band or mode change in one changes it for all.
+• **PTT:** each program releases only its own transmission. The radio stops transmitting only when no connected program holds PTT – a “PTT off” from another program does not cut a transmission (neither an external program's nor FT8, RTTY or the SWR sweep in FT-710 Control). Disconnecting a program releases its PTT.
 """),
 
         HelpTopic(id: "audio", icon: "speaker.wave.2", titlePL: "Audio USB", titleEN: "USB audio",

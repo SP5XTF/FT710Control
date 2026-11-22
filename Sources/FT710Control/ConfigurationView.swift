@@ -6,7 +6,7 @@ import SwiftUI
 /// rejestr DiagnosticsHub (okno Konfiguracji jest osobnym oknem).
 struct ConfigurationView: View {
     enum Section: String, CaseIterable, Identifiable {
-        case station, radio, display, services, alerts, catShare, remote, program
+        case station, radio, display, cluster, ft8, cw, services, alerts, catShare, remote, program
         var id: String { rawValue }
 
         var title: String {
@@ -14,6 +14,9 @@ struct ConfigurationView: View {
             case .station: return L("Stacja")
             case .radio: return L("Radio i CAT")
             case .display: return L("Skop i wodospad")
+            case .cluster: return "DX Cluster"
+            case .ft8: return "FT8/FT4"
+            case .cw: return L("CW – kluczowanie")
             case .services: return L("Dziennik i serwisy")
             case .alerts: return L("Alerty")
             case .catShare: return "CAT Share"
@@ -27,6 +30,9 @@ struct ConfigurationView: View {
             case .station: return "person.text.rectangle"
             case .radio: return "cable.connector"
             case .display: return "waveform"
+            case .cluster: return "antenna.radiowaves.left.and.right"
+            case .ft8: return "square.grid.3x3"
+            case .cw: return "dot.radiowaves.right"
             case .services: return "book.closed"
             case .alerts: return "bell"
             case .catShare: return "point.3.connected.trianglepath.dotted"
@@ -40,6 +46,9 @@ struct ConfigurationView: View {
             case .station: return L("Twój znak, lokator, strefy i dane do dziennika; konta QRZ.com i HamQTH do wyszukiwania stacji.")
             case .radio: return L("Połączenie z FT-710 przez USB (port CAT i prędkość), automatyczne łączenie i limit czasu nadawania.")
             case .display: return L("Wygląd skopu RF i wodospadu: tryb (płaski / 3D), paleta, prędkość, skala, spoty DX Cluster i POTA na skopie.")
+            case .cluster: return L("Węzeł DX Cluster (adres, port, logowanie), automatyczne łączenie i filtry spotów. Lista spotów i łączenie - zakładka DX CLUSTER.")
+            case .ft8: return L("Zachowanie sekwencji FT8/FT4 (limit wywołań, kolejność wołających, praca split) i zgłaszanie odebranych stacji do PSKReporter.")
+            case .cw: return L("Jak program nadaje CW: przez linię portu (DTR/RTS, dokładne tempo) albo przez klucz radia; sprawdzenie i poprawienie ustawień FT-710.")
             case .services: return L("Wysyłanie łączności i pobieranie potwierdzeń: LoTW, eQSL, QRZ Logbook, Club Log, HRDLog, WRL.")
             case .alerts: return L("Powiadomienia o stacjach i krajach: rodzaje alertów, źródła (DX Cluster, FT8, POTA, QSL), dźwięk, obserwowane znaki.")
             case .catShare: return L("Serwer zgodny z Hamlib rigctld (127.0.0.1:4532): WSJT-X, JTDX i inne programy sterują radiem przez FT-710 Control.")
@@ -96,6 +105,12 @@ struct ConfigurationView: View {
             if let cat = hub.cat { RadioConnectionSettings(cat: cat) } else { mainWindowNeeded }
         case .display:
             DisplayView(display: DisplaySettings.shared, vertical: true)
+        case .cluster:
+            if let cluster = hub.cluster { ClusterSettingsForm(cluster: cluster) } else { mainWindowNeeded }
+        case .ft8:
+            if let ft8 = hub.ft8 { FT8ConfigSection(ft8: ft8) } else { mainWindowNeeded }
+        case .cw:
+            if let cw = hub.cw, let cat = hub.cat { CWKeyingSettings(cw: cw, cat: cat).frame(maxWidth: 520, alignment: .leading) } else { mainWindowNeeded }
         case .services:
             IntegrationsView(uploader: services.uploader, store: services.logbook, embedded: true)
         case .alerts:
@@ -197,5 +212,87 @@ struct ProgramSettings: View {
                 .font(.caption).foregroundStyle(.secondary)
         }
         .formStyle(.grouped)
+    }
+}
+
+
+/// Dział „DX Cluster”: węzeł, logowanie, łączenie i filtry - te same ustawienia co w zakładce DX CLUSTER.
+struct ClusterSettingsForm: View {
+    @ObservedObject var cluster: DXClusterClient
+    @AppStorage("clusterBandFilter") private var bandFilter = "all"
+    @AppStorage("clusterModeFilter") private var modeFilter = "all"
+    @AppStorage("clusterHideWorked") private var hideWorked = false
+    @AppStorage("clusterSetsMode") private var setsMode = true
+    @State private var password = ""
+
+    var body: some View {
+        Form {
+            Section(L("Węzeł")) {
+                HStack {
+                    TextField(L("Adres węzła"), text: $cluster.host)
+                    Menu(L("Węzły")) {
+                        ForEach(DXClusterClient.presets.indices, id: \.self) { index in
+                            let preset = DXClusterClient.presets[index]
+                            Button("\(preset.name) – \(preset.host):\(preset.port)") {
+                                cluster.host = preset.host
+                                cluster.port = preset.port
+                            }
+                        }
+                    }
+                    .fixedSize()
+                }
+                TextField(L("Port"), value: $cluster.port, format: .number.grouping(.never))
+                TextField(L("Znak (pusty = Mój znak)"), text: $cluster.login)
+                SecureField(cluster.hasPassword ? L("Hasło – zapisane") : L("Hasło (jeśli węzeł wymaga)"), text: $password)
+                    .onSubmit { cluster.setPassword(password); password = "" }
+                Text(L("Enter zapisuje hasło w pęku kluczy; puste pole + Enter usuwa zapisane hasło"))
+                    .font(.caption).foregroundStyle(.secondary)
+                Toggle(L("Łącz automatycznie"), isOn: $cluster.autoConnect)
+                Text(L("Połącz przy starcie programu i ponawiaj po zerwaniu połączenia")).font(.caption).foregroundStyle(.secondary)
+                Toggle(L("Ostatnie spoty po połączeniu"), isOn: $cluster.fetchRecent)
+                Text(L("Po zalogowaniu wysyła sh/dx 30, żeby od razu zobaczyć ostatnie spoty")).font(.caption).foregroundStyle(.secondary)
+            }
+            Section(L("Filtry spotów")) {
+                Picker(L("Pasmo"), selection: $bandFilter) {
+                    Text(L("wszystkie")).tag("all")
+                    Text(L("moje pasmo")).tag("mine")
+                    ForEach(Bands.table.map { $0.name }, id: \.self) { name in Text(name).tag(name) }
+                }
+                Picker(L("Tryb"), selection: $modeFilter) {
+                    Text(L("wszystkie")).tag("all")
+                    Text("CW").tag("CW")
+                    Text("SSB").tag("SSB")
+                    Divider()
+                    Text(L("cyfrowe – wszystkie")).tag("DIGI")
+                    ForEach(DXClusterView.digiModes, id: \.self) { Text($0).tag($0) }
+                    Text(L("inne cyfrowe")).tag("OTHER")
+                }
+                Toggle(L("Ukryj zrobione na tym paśmie"), isOn: $hideWorked)
+                Toggle(L("Ustaw tryb przy strojeniu"), isOn: $setsMode)
+                Text(L("Podwójne kliknięcie ustawia też tryb (CW / SSB / DATA) zgodnie ze spotem")).font(.caption).foregroundStyle(.secondary)
+            }
+        }
+        .formStyle(.grouped)
+        .frame(maxWidth: 620, alignment: .leading)
+    }
+}
+
+
+/// Dział „FT8/FT4”: opcje sekwencji (wspólne z okienkiem „Opcje…”) i PSKReporter.
+struct FT8ConfigSection: View {
+    @ObservedObject var ft8: FT8Manager
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            FT8SequenceOptionsForm(ft8: ft8)
+            Divider()
+            Toggle(L("Zgłaszaj odebrane stacje do PSKReporter"), isOn: $ft8.pskEnabled)
+            Text(L("Zgłaszanie odebranych stacji do pskreporter.info (co 5 min, każda stacja najwyżej raz na godzinę na paśmie)"))
+                .font(.caption).foregroundStyle(.secondary)
+            TextField(L("Opis anteny wysyłany do PSKReporter (opcjonalnie)"), text: $ft8.pskAntenna)
+                .frame(width: 320)
+                .disabled(!ft8.pskEnabled)
+        }
+        .frame(maxWidth: 560, alignment: .leading)
     }
 }

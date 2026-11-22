@@ -140,6 +140,8 @@ final class DiagnosticsHub {
     weak var ft8: FT8Manager?
     weak var remote: RemoteStation?
     weak var catShare: CATShareServer?
+    weak var cluster: DXClusterClient?
+    weak var cw: CWManager?
     /// „Odblokuj TX” z okna głównego - dla okien nadających poza nim (pomiar SWR).
     var txArmed = false
     /// Start programu (rejestracja okna głównego) - czas działania w raporcie.

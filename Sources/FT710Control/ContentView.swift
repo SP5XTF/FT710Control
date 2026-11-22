@@ -191,6 +191,7 @@ struct ContentView: View {
             let hub = DiagnosticsHub.shared
             hub.cat = cat; hub.scope = rfScope; hub.audio = audio; hub.ft8 = ft8Holder.manager
             hub.remote = remote; hub.catShare = shareBox.value
+            hub.cluster = cluster; hub.cw = cwHolder.manager
             hub.txArmed = txArmed
             uploader.attach(logbook)                    // automatyczna wysyłka nowych QSO do serwisów
             cat.startAutoConnect()                      // zapamiętany port radia

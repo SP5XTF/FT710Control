@@ -132,7 +132,7 @@ struct DXClusterView: View {
     }
 
     /// Emisje cyfrowe z osobną pozycją w filtrze (rozpoznawane z komentarza spotu albo częstotliwości FT8).
-    private static let digiModes = ["FT8", "FT4", "RTTY", "PSK", "JS8", "Q65"]
+    static let digiModes = ["FT8", "FT4", "RTTY", "PSK", "JS8", "Q65"]
 
     /// Filtr trybu: wszystkie / CW / SSB / cyfrowe (wszystkie) / konkretna emisja cyfrowa / inne cyfrowe.
     private static func matchesMode(_ spot: DXSpot, _ filter: String) -> Bool {

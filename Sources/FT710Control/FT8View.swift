@@ -487,30 +487,7 @@ struct FT8TransmitPanel: View {
     private var sequenceOptions: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(L("Opcje sekwencji FT8/FT4")).font(.headline)
-            HStack(spacing: 6) {
-                Text(L("Limit wywołań:"))
-                Picker("", selection: $ft8.callLimit) {
-                    ForEach([3, 5, 9], id: \.self) { Text("\($0)").tag($0) }
-                    Text(L("bez limitu")).tag(0)
-                }
-                .labelsHidden()
-                .frame(width: 110)
-            }
-            .help(L("Ile razy z rzędu wołać stację, która nie odpowiada (wywołanie i R-raport); potem nadawanie się wyłącza. Każda odpowiedź tej stacji liczy od nowa. CQ - bez limitu (pilnuje watchdog)."))
-            HStack(spacing: 6) {
-                Text(L("Kilku wołających:"))
-                Picker("", selection: $ft8.callerPreference) {
-                    ForEach(FTCallerPreference.allCases) { Text($0.name).tag($0) }
-                }
-                .labelsHidden()
-                .frame(width: 220)
-            }
-            .help(L("Gdy na Twoje CQ odpowiada kilka stacji naraz - której odpowiedzieć najpierw. Odległość z lokatora stacji, a bez niego z położenia kraju (cty.dat)."))
-            Toggle(L("Po QSO odpowiadaj następnemu wołającemu"), isOn: $ft8.answerNextCaller)
-                .help(L("Po QSO zaczętym od Twojego CQ TX zostaje włączony: w następnym cyklu odpowiedź kolejnej wołającej stacji (wg „Kilku wołających”), a gdy nikt nie woła - znowu CQ. Po QSO z Twojego wołania (S&P) działa „Wyłącz TX po 73”."))
-            Toggle(L("Trzymaj TX"), isOn: $ft8.holdTxFreq)
-                .help(L("Dwuklik na stacji nie przenosi częstotliwości nadawania (praca split)"))
-            Toggle(L("Wyłącz TX po 73"), isOn: $ft8.disableAfter73)
+            FT8SequenceOptionsForm(ft8: ft8)
         }
         .padding(14)
         .frame(width: 380)
@@ -640,6 +617,41 @@ struct PSKReporterControl: View {
                 Text("\(psk.sentSpots)").font(.caption.monospacedDigit()).foregroundStyle(.secondary)
                     .help(psk.status.isEmpty ? L("Pierwsza wysyłka po ok. 5 minutach") : Lr(psk.status))
             }
+        }
+    }
+}
+
+
+/// Opcje sekwencji FT8/FT4 - wspólne dla okienka „Opcje…” (zakładka FT8) i okna Konfiguracja.
+struct FT8SequenceOptionsForm: View {
+    @ObservedObject var ft8: FT8Manager
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 6) {
+                Text(L("Limit wywołań:"))
+                Picker("", selection: $ft8.callLimit) {
+                    ForEach([3, 5, 9], id: \.self) { Text("\($0)").tag($0) }
+                    Text(L("bez limitu")).tag(0)
+                }
+                .labelsHidden()
+                .frame(width: 110)
+            }
+            .help(L("Ile razy z rzędu wołać stację, która nie odpowiada (wywołanie i R-raport); potem nadawanie się wyłącza. Każda odpowiedź tej stacji liczy od nowa. CQ - bez limitu (pilnuje watchdog)."))
+            HStack(spacing: 6) {
+                Text(L("Kilku wołających:"))
+                Picker("", selection: $ft8.callerPreference) {
+                    ForEach(FTCallerPreference.allCases) { Text($0.name).tag($0) }
+                }
+                .labelsHidden()
+                .frame(width: 220)
+            }
+            .help(L("Gdy na Twoje CQ odpowiada kilka stacji naraz - której odpowiedzieć najpierw. Odległość z lokatora stacji, a bez niego z położenia kraju (cty.dat)."))
+            Toggle(L("Po QSO odpowiadaj następnemu wołającemu"), isOn: $ft8.answerNextCaller)
+                .help(L("Po QSO zaczętym od Twojego CQ TX zostaje włączony: w następnym cyklu odpowiedź kolejnej wołającej stacji (wg „Kilku wołających”), a gdy nikt nie woła - znowu CQ. Po QSO z Twojego wołania (S&P) działa „Wyłącz TX po 73”."))
+            Toggle(L("Trzymaj TX"), isOn: $ft8.holdTxFreq)
+                .help(L("Dwuklik na stacji nie przenosi częstotliwości nadawania (praca split)"))
+            Toggle(L("Wyłącz TX po 73"), isOn: $ft8.disableAfter73)
         }
     }
 }

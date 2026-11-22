@@ -139,16 +139,30 @@ final class CATShareServer: ObservableObject {
         }
     }
 
-    /// Rozłączenie klienta zawsze zwalnia PTT, które ten klient włączył.
+    /// Rozłączenie klienta zawsze zwalnia PTT, które ten klient włączył (radio przestaje nadawać, jeśli żaden
+    /// inny program nie trzyma PTT).
     private func drop(_ id: ObjectIdentifier) {
         guard let session = sessions.removeValue(forKey: id) else { return }
         if session.pttOn {
-            cat?.ptt(false)
             appendLog(L("! klient rozłączony podczas nadawania - TX0"))
+            releasePTT(of: session)
         }
         session.connection.cancel()
         clients = sessions.count
         appendLog(L("− klient rozłączony"))
+    }
+
+    /// Zwolnienie PTT jednego programu. Radio przestaje nadawać dopiero, gdy ŻADEN inny podłączony program nie
+    /// trzyma PTT. Program, który sam nie włączył PTT, nie może przerwać nadawania - ani innego programu, ani
+    /// samego FT-710 Control (FT8, RTTY, pomiar SWR…); niektóre programy wysyłają „T 0” cyklicznie.
+    private func releasePTT(of session: Session) {
+        guard session.pttOn else { return }
+        session.pttOn = false
+        if sessions.values.contains(where: { $0 !== session && $0.pttOn }) {
+            appendLog(L("PTT trzyma inny program - radio nadaje dalej"))
+        } else {
+            cat?.ptt(false)
+        }
     }
 
     private func releaseAllPTT() {
@@ -315,8 +329,7 @@ final class CATShareServer: ObservableObject {
                 session.pttOn = true
                 cat.ptt(true)
             } else {
-                session.pttOn = false
-                cat.ptt(false)
+                releasePTT(of: session)                          // tylko własne PTT tego programu
             }
             return Self.ok
         case "s":

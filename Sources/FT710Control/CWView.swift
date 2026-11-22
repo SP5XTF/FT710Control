@@ -186,6 +186,35 @@ struct CWView: View {
                 ProgressView(value: cw.sendProgress)
                 Text(cw.sendingText).font(.caption.monospaced()).lineLimit(1)
             }
+            if let message = cw.txMessage.map(Lr) {
+                Text(message).font(.caption).foregroundStyle(.orange).fixedSize(horizontal: false, vertical: true)
+            }
+            CWKeyingSettings(cw: cw, cat: cat)
+        }
+    }
+
+
+    private func macroLabel(_ template: String) -> String {
+        let text = cw.expand(template)
+        return text.count > 10 ? String(text.prefix(9)) + "…" : text
+    }
+
+    private func sendOutgoing() {
+        guard !cw.outgoing.isEmpty, txArmed else { return }
+        cw.send(cw.outgoing, armed: txArmed)
+        cw.outgoing = ""
+    }
+}
+
+
+/// Kluczowanie CW (sposób nadawania, port i linia klucza) i sprawdzenie radia - wspólne dla zakładki CW
+/// i okna Konfiguracja.
+struct CWKeyingSettings: View {
+    @ObservedObject var cw: CWManager
+    @ObservedObject var cat: CATClient
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
             Picker(L("Nadawanie przez"), selection: $cw.method) {
                 ForEach(CWManager.TXMethod.allCases) { Text($0.name).tag($0) }
             }
@@ -203,9 +232,6 @@ struct CWView: View {
                     .frame(width: 70)
                 }
                 .controlSize(.small)
-            }
-            if let message = cw.txMessage.map(Lr) {
-                Text(message).font(.caption).foregroundStyle(.orange).fixedSize(horizontal: false, vertical: true)
             }
             radioCheckPanel
             Text(cw.method == .line
@@ -242,16 +268,5 @@ struct CWView: View {
             }
         }
         .controlSize(.small)
-    }
-
-    private func macroLabel(_ template: String) -> String {
-        let text = cw.expand(template)
-        return text.count > 10 ? String(text.prefix(9)) + "…" : text
-    }
-
-    private func sendOutgoing() {
-        guard !cw.outgoing.isEmpty, txArmed else { return }
-        cw.send(cw.outgoing, armed: txArmed)
-        cw.outgoing = ""
     }
 }

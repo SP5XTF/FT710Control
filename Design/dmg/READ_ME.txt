@@ -90,16 +90,13 @@ e) WSJT-X / JTDX (optional):
 
 6. WHAT'S NEW IN THIS VERSION - worth checking
 ----------------------------------------------
-- The RF scope works right away: the FTDI libraries are built into the program (nothing to install).
-- Configuration (Cmd-,): all settings in one window with descriptions - station, radio and CAT,
-  scope and waterfall, log and services, alerts, CAT Share, remote operation, program. The former
-  DISPLAY, CAT SHARE and REMOTE tabs are now Configuration sections.
-- Listening filter (AUDIO SPECTRUM tab): a steep band-pass filter on the Mac (SSB, CW 500/200/100 Hz,
-  data), drag the edges, notches by double-click; the band and notches also show on the RF scope.
-- Tuning from cluster spots, POTA and band buttons lands right away (before, a mode change could leave
-  it off frequency the first time); clicking the scope is accurate to 10 Hz.
-- Earlier (0.9.4-0.9.5): PSK31/PSK63, antenna SWR sweep, "Who hears me" map, MacBook layout, manual
-  QSO entry, settings backup, diagnostic report.
+- Configuration (Cmd-,) has new sections: DX Cluster (node, login, filters), FT8/FT4 (sequence
+  options, PSKReporter) and CW - keying (port line or the radio's keyer, radio check).
+- CAT Share: several programs at once without cutting each other's transmission - the radio stops
+  transmitting only when no program holds PTT; a "PTT off" from another program no longer cuts FT8,
+  RTTY or the SWR sweep in FT-710 Control either.
+- Earlier (0.9.6): RF scope with nothing to install (built-in FTDI libraries), the Configuration
+  window, listening filter with notches, fixed tuning from cluster and POTA spots.
 
 7. REPORTING BUGS
 -----------------
