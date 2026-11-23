@@ -98,6 +98,7 @@ struct ContentView: View {
         }
         .padding(8)
         .id(languageCode)
+        .onChange(of: languageCode) { _ in AppLanguage.applySystemLanguage() }   // menu systemowe - po restarcie
         .safeAreaInset(edge: .bottom, spacing: 0) { statusBar }
         .background(Theme.background)
         .preferredColorScheme(.dark)
@@ -115,7 +116,11 @@ struct ContentView: View {
                 audio.endTX()
             }
         }
-        .onChange(of: cat.transmitting) { tx in txStartedAt = tx ? Date() : nil }
+        .onChange(of: cat.transmitting) { tx in
+            txStartedAt = tx ? Date() : nil
+            // odsłuch i filtry zamrożone przy nadawaniu; CW (3 = CW-U, 7 = CW-L) - krótki powrót (break-in)
+            audio.radioTransmitting(tx, cw: cat.modeCode == "3" || cat.modeCode == "7")
+        }
         .onChange(of: cat.isConnected) { connected in if !connected { digitSelection = nil } }
         .background(
             ArrowKeyMonitor(active: digitSelection != nil && cat.isConnected) { code in handleArrow(code) }
@@ -1715,6 +1720,8 @@ struct PanelSplitter: View {
 
 /// Menu Widok: zwinięcie i rozwinięcie dolnego panelu (⌥⌘B).
 struct LayoutCommands: Commands {
+    /// Zmiana języka w programie od razu odświeża te pozycje menu.
+    @AppStorage(AppLanguage.storageKey) private var languageCode = AppLanguage.current.rawValue
     @AppStorage("layout.bottomCollapsed") private var bottomCollapsed = false
 
     var body: some Commands {
@@ -1728,6 +1735,8 @@ struct LayoutCommands: Commands {
 
 /// Menu Okno: narzędzia w osobnych oknach (pomiar SWR anteny).
 struct ToolsCommands: Commands {
+    /// Zmiana języka w programie od razu odświeża te pozycje menu.
+    @AppStorage(AppLanguage.storageKey) private var languageCode = AppLanguage.current.rawValue
     @Environment(\.openWindow) private var openWindow
 
     var body: some Commands {

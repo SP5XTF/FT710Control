@@ -183,7 +183,7 @@ struct ProgramSettings: View {
             Picker(L("Język"), selection: $languageCode) {
                 ForEach(AppLanguage.allCases, id: \.rawValue) { Text($0.displayName).tag($0.rawValue) }
             }
-            Text(L("Język interfejsu, pomocy i komunikatów (polski albo angielski)."))
+            Text(L("Język interfejsu, pomocy i komunikatów (polski albo angielski). Menu systemowe (File, Edit, Window…) zmienia język po ponownym uruchomieniu programu."))
                 .font(.caption).foregroundStyle(.secondary)
             HStack {
                 Text(L("Wersja {1}", ADIF.programVersion))

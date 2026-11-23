@@ -624,6 +624,7 @@ struct ScopeStatusText: View {
             .lineLimit(1)
             .truncationMode(.tail)
             .frame(maxWidth: .infinity, alignment: .leading)
+            .help(Lr(scope.status))                                  // pełna treść (np. błędu) po najechaniu myszą
     }
 }
 

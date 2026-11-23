@@ -247,6 +247,8 @@ final class DiagnosticsHub {
 
 /// Menu Plik: kopia ustawień; menu Pomoc: raport diagnostyczny.
 struct SettingsCommands: Commands {
+    /// Zmiana języka w programie od razu odświeża te pozycje menu.
+    @AppStorage(AppLanguage.storageKey) private var languageCode = AppLanguage.current.rawValue
     var body: some Commands {
         CommandGroup(after: .newItem) {
             Divider()

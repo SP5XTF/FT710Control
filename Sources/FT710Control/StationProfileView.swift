@@ -302,6 +302,8 @@ struct StationProfileView: View {
 
 /// Menu aplikacji: „Profil stacji…” (⇧⌘,).
 struct ProfileCommands: Commands {
+    /// Zmiana języka w programie od razu odświeża te pozycje menu.
+    @AppStorage(AppLanguage.storageKey) private var languageCode = AppLanguage.current.rawValue
     @Environment(\.openWindow) private var openWindow
 
     var body: some Commands {

@@ -64,6 +64,8 @@ struct HelpView: View {
 
 /// Menu Pomoc: „Pomoc FT-710 Control” (⌘?) otwiera okno pomocy.
 struct HelpCommands: Commands {
+    /// Zmiana języka w programie od razu odświeża te pozycje menu.
+    @AppStorage(AppLanguage.storageKey) private var languageCode = AppLanguage.current.rawValue
     @Environment(\.openWindow) private var openWindow
 
     var body: some Commands {
@@ -1202,6 +1204,7 @@ macOS pyta o dostęp do mikrofonu przy pierwszym użyciu – zgoda jest potrzebn
 • **Pasek stanu** (na dole okna): ikona głośnika wycisza i odcisza odsłuch (poziom zostaje zapamiętany), suwak to ta sama głośność co w zakładce AUDIO; głośność jest zapamiętywana między uruchomieniami.
 • **Korektor nadawania (TX)** – 12 pasm (60, 100, 160, 250, 400, 630 Hz, 1; 1,4; 1,8; 2,3; 2,8; 3,3 kHz), ±12 dB, dla mikrofonu Maca i mikrofonu panelu zdalnego (dźwięk przez USB do radia). Gotowe ustawienia: **Płasko**, **DX – przebicie** (obcięte niskie, podbite 1,4–2,8 kHz – czytelność w szumie i pile-upie), **Rozmowa – pełny głos**, **Zawody**; ruszenie suwaka – „Własne”. Korektor zmienia barwę, nie głośność (całość ściszana o największe podbicie – nie przesteruje toru); poziom ustaw MIC GAIN w radiu. FT-710 ma własny korektor mikrofonu – na początek ustaw go płasko, żeby oba się nie sumowały. Sprawdzaj ALC i najlepiej odsłuch na drugim odbiorniku albo WebSDR.
 • **Samoczynne wznowienie odsłuchu:** gdy macOS zatrzyma dźwięk (np. po uśpieniu monitora z głośnikami, wybudzeniu Maca albo zmianie urządzeń audio), program sam uruchamia odsłuch od nowa – a z nim widmo audio i wodospad FT8, które karmi ten sam dźwięk. Dodatkowo co 5 s sprawdza, czy dźwięk z radia płynie. Nie trzeba ręcznie wyłączać i włączać odsłuchu.
+• **Odsłuch przy nadawaniu:** gdy radio nadaje (z mikrofonu radia, Maca, FT8, RTTY…), odsłuch i filtry (AI, redukcja szumu, wyrównanie głośności) są zamrożone. Po nadawaniu dźwięk najpierw przez chwilę przechodzi przez filtry bez wysyłania do słuchawek (radio przełącza się na odbiór), a potem płynnie narasta – bez głośnego „wybuchu” po puszczeniu PTT. W CW powrót jest krótszy (break-in).
 
 **Filtr odsłuchu** (zakładka **WIDMO AUDIO**)
 • **Filtr pasmowy na Macu:** stromy (od krawędzi do −85 dB w ok. 100 Hz), bez zniekształceń fazy, opóźnienie 16 ms. Działa tylko na to, co słychać – dekodery (FT8, PSK, RTTY, CW, SSTV) dostają pełny dźwięk.
@@ -1238,6 +1241,7 @@ macOS asks for microphone access on first use – permission is also needed to r
 • **Status bar** (at the bottom of the window): the speaker icon mutes and unmutes listening (the level is remembered), the slider is the same volume as in the AUDIO tab; the volume is remembered between launches.
 • **Transmit equalizer (TX)** – 12 bands (60, 100, 160, 250, 400, 630 Hz, 1, 1.4, 1.8, 2.3, 2.8, 3.3 kHz), ±12 dB, for the Mac microphone and the remote panel microphone (audio over USB to the radio). Presets: **Flat**, **DX – punch** (lows cut, 1.4–2.8 kHz boosted – readability in noise and pile-ups), **Ragchew – full voice**, **Contest**; moving a slider – “Custom”. The equalizer changes the tone, not the loudness (the whole is lowered by the largest boost – it does not overdrive the path); set the level with MIC GAIN in the radio. The FT-710 has its own microphone equalizer – start with it flat so the two do not add up. Watch ALC and preferably listen on a second receiver or a WebSDR.
 • **Automatic monitoring restart:** when macOS stops audio (e.g. after a monitor with speakers goes to sleep, after the Mac wakes or an audio device change), the program restarts monitoring itself – and with it the audio spectrum and the FT8 waterfall, which are fed by the same audio. It also checks every 5 s that audio from the radio is flowing. No need to turn monitoring off and on by hand.
+• **Monitoring while transmitting:** when the radio transmits (from the radio microphone, the Mac, FT8, RTTY…), monitoring and the filters (AI, noise reduction, level evening) are frozen. After transmitting, the audio first passes through the filters for a moment without going to the headphones (the radio switches to receive), then fades in smoothly – no loud burst after releasing PTT. In CW the return is shorter (break-in).
 
 **Listening filter** (the **AUDIO SPECTRUM** tab)
 • **Band-pass filter on the Mac:** steep (from the edge to −85 dB in about 100 Hz), no phase distortion, 16 ms delay. It affects only what you hear – the decoders (FT8, PSK, RTTY, CW, SSTV) get the full audio.
@@ -1363,7 +1367,7 @@ iPhone: if you hear nothing, check the volume; the page also tries to play in si
                   bodyPL: """
 **„Brak odpowiedzi” po połączeniu** – wybierz drugi port z pary, sprawdź CAT RATE = 38400 w radiu i prędkość w pasku stanu.
 
-**Skop: „Nie znaleziono libft4222.dylib”** – w programie z obrazu .dmg biblioteki są wbudowane: pobierz program ponownie z GitHuba. Przy programie zbudowanym ze źródeł zainstaluj obie biblioteki FTDI (libft4222 i libftd2xx) w `/usr/local/lib` i zdejmij kwarantannę (`xattr`). **„Nie można otworzyć FT4222”** – SCU-LAN10 = ON, ponowne podłączenie USB, żaden inny program nie używa skopu.
+**Skop: „Brak biblioteki FTDI do skopu (libft4222)”** – w programie z obrazu .dmg biblioteki są wbudowane: pobierz program ponownie z GitHuba. Przy programie zbudowanym ze źródeł zainstaluj obie biblioteki FTDI (libft4222 i libftd2xx) w `/usr/local/lib` i zdejmij kwarantannę (`xattr`). **„Nie można otworzyć FT4222”** – SCU-LAN10 = ON, ponowne podłączenie USB, żaden inny program nie używa skopu.
 
 **macOS pyta o hasło do pęku kluczy (QRZ)** – kliknij „Zawsze pozwalaj”. Po każdej nowej kompilacji programu macOS pyta ponownie (traktuje ją jak nowy program).
 
@@ -1387,7 +1391,7 @@ iPhone: if you hear nothing, check the volume; the page also tries to play in si
                   bodyEN: """
 **“No response” after connecting** – choose the other port of the pair, check CAT RATE = 38400 on the radio and the speed in the status bar.
 
-**Scope: “libft4222.dylib not found”** – in the program from the .dmg image the libraries are built in: download the program again from GitHub. For a program built from source install both FTDI libraries (libft4222 and libftd2xx) in `/usr/local/lib` and remove the quarantine flag (`xattr`). **“Cannot open the FT4222”** – SCU-LAN10 = ON, replug USB, no other program is using the scope.
+**Scope: “FTDI library for the scope (libft4222) is missing”** – in the program from the .dmg image the libraries are built in: download the program again from GitHub. For a program built from source install both FTDI libraries (libft4222 and libftd2xx) in `/usr/local/lib` and remove the quarantine flag (`xattr`). **“Cannot open the FT4222”** – SCU-LAN10 = ON, replug USB, no other program is using the scope.
 
 **macOS asks for the Keychain password (QRZ)** – click “Always Allow”. After every new build macOS asks again (it treats it as a new program).
 

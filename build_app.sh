@@ -57,13 +57,19 @@ rm -rf "${APP}"
 mkdir -p "${APP}/Contents/MacOS" "${APP}/Contents/Resources"
 cp "${BIN_DIR}/${APP_NAME}" "${APP}/Contents/MacOS/${APP_NAME}"
 cp Design/AppIcon.icns "${APP}/Contents/Resources/AppIcon.icns"
+# lokalizacje pakietu: macOS pokazuje systemowe pozycje menu (File, Edit, Window…) w języku programu
+for lang in en pl; do
+    mkdir -p "${APP}/Contents/Resources/${lang}.lproj"
+    printf '/* FT-710 Control */\n' > "${APP}/Contents/Resources/${lang}.lproj/InfoPlist.strings"
+done
 
 cat > "${APP}/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <key>CFBundleDevelopmentRegion</key><string>pl</string>
+    <key>CFBundleDevelopmentRegion</key><string>en</string>
+    <key>CFBundleLocalizations</key><array><string>en</string><string>pl</string></array>
     <key>CFBundleExecutable</key><string>${APP_NAME}</string>
     <key>CFBundleIdentifier</key><string>${BUNDLE_ID}</string>
     <key>CFBundleName</key><string>${APP_NAME}</string>

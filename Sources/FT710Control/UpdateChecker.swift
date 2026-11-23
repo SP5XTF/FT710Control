@@ -118,6 +118,8 @@ struct UpdateBadge: View {
 
 /// Menu programu: „Sprawdź aktualizacje…”.
 struct UpdateCommands: Commands {
+    /// Zmiana języka w programie od razu odświeża te pozycje menu.
+    @AppStorage(AppLanguage.storageKey) private var languageCode = AppLanguage.current.rawValue
     var body: some Commands {
         CommandGroup(after: .appInfo) {
             Button(L("Sprawdź aktualizacje…")) { UpdateChecker.shared.checkManually() }

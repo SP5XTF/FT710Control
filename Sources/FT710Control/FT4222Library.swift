@@ -43,7 +43,7 @@ final class FT4222Library {
         var errorDescription: String? {
             switch self {
             case .notFound(let reasons):
-                return L("Nie znaleziono libft4222.dylib. Zainstaluj LibFT4222 for Mac ze strony FTDI do /usr/local/lib i zdejmij kwarantannę (xattr). Szczegóły: {1}",
+                return L("Brak biblioteki FTDI do skopu (libft4222) – pobierz program ponownie z GitHuba (Releases): wersja z .dmg ma ją wbudowaną. Szczegóły: {1}",
                          reasons.joined(separator: " | "))
             case .missingSymbol(let symbol, let path):
                 return L("Biblioteka {1} nie zawiera funkcji {2} (potrzebna też libftd2xx.dylib?)", path, symbol)

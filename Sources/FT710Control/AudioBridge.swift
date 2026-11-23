@@ -48,7 +48,28 @@ final class AudioBridge: @unchecked Sendable {
         return CFAbsoluteTimeGetCurrent() - lastInputTime
     }
     /// Gdy true, dźwięk nie jest przekazywany dalej (miernik poziomu nadal działa).
-    var muted = false
+    /// Wyciszenie odsłuchu (nadawanie z mikrofonu Maca). Po zdjęciu - rozbieg filtrów i płynne narastanie.
+    var muted = false { didSet { if oldValue && !muted { startRecovery() } } }
+    /// Radio nadaje (stan z CAT, każde źródło modulacji - też mikrofon radia, FT8, RTTY…): odsłuch i filtry
+    /// zamrożone. Wcześniej działały podczas nadawania: wyrównanie głośności podkręcało wzmocnienie na ciszy,
+    /// a redukcja szumu dopasowywała się do niej - po nadawaniu było głośniej, dopóki filtry nie wróciły.
+    var radioTransmitting = false { didSet { if oldValue && !radioTransmitting { startRecovery() } } }
+    /// Po nadawaniu: do tej chwili dźwięk przechodzi przez filtry (dopasowanie), ale nie trafia do słuchawek
+    /// (radio przełącza się na odbiór, jego AGC dochodzi do siebie - stan przejściowy).
+    private var primeUntil: CFAbsoluteTime = 0
+    /// Płynne narastanie głośności po rozbiegu (0 → 1).
+    private var fadeLevel: Float = 1
+    /// Czas rozbiegu i narastania po nadawaniu: SSB/cyfrowe 0,35 + 0,25 s; CW krótko (0,12 + 0,08 s) -
+    /// przy break-in operator chce słyszeć pasmo zaraz po ostatnim znaku.
+    var recoveryHold: Double = 0.35
+    var recoveryFade: Double = 0.25
+
+    private func startRecovery() {
+        lock.lock()
+        primeUntil = CFAbsoluteTimeGetCurrent() + recoveryHold
+        fadeLevel = 0
+        lock.unlock()
+    }
     var onLevel: (@Sendable (Float) -> Void)?
     /// Próbki kanału 0 i częstotliwość próbkowania (wątek audio - tylko kopiuj i kolejkuj).
     var onSamples: (@Sendable ([Float], Double) -> Void)?
@@ -143,12 +164,13 @@ final class AudioBridge: @unchecked Sendable {
             onSamples(Array(UnsafeBufferPointer(start: channel, count: frames)), buffer.format.sampleRate)
         }
 
-        if muted { return }
+        if muted || radioTransmitting { return }                // nadawanie: filtry zamrożone, bez odsłuchu
 
         // własna, mocna referencja do odtwarzacza - nie zniknie w trakcie użycia, nawet gdy wątek główny
         // właśnie zatrzymuje albo podmienia tor
         lock.lock()
         let queued = pending, isRunning = running, player = self.player
+        let priming = CFAbsoluteTimeGetCurrent() < primeUntil
         lock.unlock()
         guard isRunning else { return }
         if queued > 8 { return }   // różnica zegarów urządzeń: gubimy nadmiar zamiast narastać opóźnienie
@@ -161,12 +183,26 @@ final class AudioBridge: @unchecked Sendable {
                 txEqualizer.process(data[0], count: count, gains: gains, sampleRate: copy.format.sampleRate)
                 processed = true
             }
+            if priming { return }                                    // rozbieg po nadawaniu: filtry tak, słuchawki nie
+            lock.lock(); var fade = fadeLevel; lock.unlock()
+            if fade < 1 {
+                // płynne narastanie po nadawaniu (bez skoku głośności i trzasku)
+                let step = Float(1 / (max(recoveryFade, 0.01) * max(copy.format.sampleRate, 1)))
+                for i in 0..<count {
+                    data[0][i] *= fade
+                    fade = min(1, fade + step)
+                }
+                processed = true
+                lock.lock(); fadeLevel = fade; lock.unlock()
+            }
             if processed {
                 // mono - wynik kanału 0 do pozostałych kanałów
                 for channel in 1..<max(Int(copy.format.channelCount), 1) {
                     data[channel].update(from: data[0], count: count)
                 }
             }
+        } else if priming {
+            return
         }
         lock.lock(); pending += 1; lock.unlock()
         player.scheduleBuffer(copy) { [weak self] in

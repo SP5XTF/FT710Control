@@ -55,6 +55,7 @@ struct FT710ControlApp: App {
     private var uploader: LogUploader { AppServices.shared.uploader }
 
     init() {
+        AppLanguage.applySystemLanguage()                          // menu systemowe w języku programu
         Self.migrateLegacySettings()
         // Potrzebne, gdy aplikacja jest uruchamiana przez `swift run` (bez bundla .app).
         NSApplication.shared.setActivationPolicy(.regular)

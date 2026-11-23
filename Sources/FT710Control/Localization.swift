@@ -10,6 +10,15 @@ enum AppLanguage: String, CaseIterable, Identifiable {
 
     static let storageKey = "appLanguage"
 
+    /// Język menu systemowego (File, Edit, Window…) i okien macOS dla tej aplikacji = język programu.
+    /// macOS czyta to przy starcie, więc zmiana obowiązuje od następnego uruchomienia.
+    static func applySystemLanguage() {
+        let wanted = [current.rawValue]
+        if UserDefaults.standard.stringArray(forKey: "AppleLanguages") != wanted {
+            UserDefaults.standard.set(wanted, forKey: "AppleLanguages")
+        }
+    }
+
     static var current: AppLanguage {
         if let saved = UserDefaults.standard.string(forKey: storageKey), let language = AppLanguage(rawValue: saved) {
             return language

@@ -401,6 +401,13 @@ final class AudioManager: ObservableObject {
         }
     }
 
+    /// Stan nadawania radia (CAT) - odsłuch i filtry zamrożone podczas nadawania z dowolnego źródła.
+    func radioTransmitting(_ on: Bool, cw: Bool) {
+        rx.recoveryHold = cw ? 0.12 : 0.35
+        rx.recoveryFade = cw ? 0.08 : 0.25
+        if rx.radioTransmitting != on { rx.radioTransmitting = on }
+    }
+
     func stopAll() {
         stopTXPath()
         rx.stop()
