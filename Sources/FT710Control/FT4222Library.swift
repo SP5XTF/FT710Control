@@ -52,6 +52,9 @@ final class FT4222Library {
     }
 
     private static var cached: FT4222Library?
+    /// Próby odrzucone przed udanym załadowaniem (ścieżka – przyczyna), np. biblioteka wbudowana w aplikację
+    /// nie dała się załadować i użyto tej z /usr/local/lib. Trafiają do dziennika skopu i raportu diagnostycznego.
+    private(set) static var skippedCandidates: [String] = []
     private static let cacheLock = NSLock()
 
     static func load() throws -> FT4222Library {
@@ -64,6 +67,7 @@ final class FT4222Library {
         }
         let main = opened.handle
         let mainPath = opened.path
+        skippedCandidates = reasons
         // Starsze pakiety FTDI dla macOS trzymały funkcje FT_* w osobnej libftd2xx.dylib.
         var ignored: [String] = []
         let d2xx = openFirst(candidates(prefix: "libftd2xx"), reasons: &ignored)?.handle
@@ -136,7 +140,11 @@ final class FT4222Library {
         var tried = Set<String>()
         for path in paths where !tried.contains(path) {
             tried.insert(path)
-            guard FileManager.default.fileExists(atPath: path) else { continue }
+            guard FileManager.default.fileExists(atPath: path) else {
+                // brak wbudowanej biblioteki = obraz .dmg zbudowany bez bibliotek FTDI - warto to widzieć w logu
+                if path.contains("/Contents/Frameworks/") { reasons.append(L("{1}: brak pliku w aplikacji", path)) }
+                continue
+            }
             if let handle = dlopen(path, RTLD_NOW | RTLD_GLOBAL) {
                 return (handle: handle, path: path)
             }

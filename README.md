@@ -12,9 +12,6 @@ from an iPhone or iPad browser.
 Documentation: **[Wiki](https://github.com/sp5xtf/FT710Control/wiki)** (the in-app help, English and Polish).
 Polish version below – [wersja polska](#po-polsku).
 
-<img width="1920" height="1200" alt="Zrzut ekranu 2026-10-30 o 19 09 18" src="https://github.com/user-attachments/assets/c4260705-4905-4d57-bb32-45c90cba34f3" />
-
-
 ## Features
 
 - **Rig control (CAT over USB)**: VFO A/B, split, modes, filters (width, shift, notch, contour), NB/NR/DNF,

@@ -75,6 +75,11 @@ final class RFScopeController: ObservableObject {
         case .opened(let path):
             status = L("Połączono z FT4222, czekam na ramki…")
             appendLog(L("Biblioteka: {1}", path))
+            // dlaczego odrzucono wcześniejsze kandydatki (np. wbudowaną w aplikację) - diagnostyka instalacji
+            for note in FT4222Library.skippedCandidates.prefix(6) { appendLog(L("Pominięto: {1}", note)) }
+            if !path.contains("/Contents/Frameworks/") {
+                appendLog(L("Uwaga: skop używa biblioteki spoza aplikacji - wbudowana nie została załadowana (przyczyna wyżej)."))
+            }
         case .frame(let frame):
             if frame.spanHz != spanHz { model.clear() }   // stare wiersze nie pasowałyby do nowej osi
             recentRaw.append(frame.raw)

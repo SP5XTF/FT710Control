@@ -1651,5 +1651,8 @@ let englishStrings: [String: String] = [
     "Węzeł": "Node",
     "Filtry spotów": "Spot filters",
     "Zgłaszaj odebrane stacje do PSKReporter": "Report received stations to PSKReporter",
-    "PTT trzyma inny program - radio nadaje dalej": "Another program holds PTT – the radio keeps transmitting"
+    "PTT trzyma inny program - radio nadaje dalej": "Another program holds PTT – the radio keeps transmitting",
+    "Pominięto: {1}": "Skipped: {1}",
+    "Uwaga: skop używa biblioteki spoza aplikacji - wbudowana nie została załadowana (przyczyna wyżej).": "Note: the scope uses a library from outside the app – the built-in one was not loaded (reason above).",
+    "{1}: brak pliku w aplikacji": "{1}: file missing in the app"
 ]

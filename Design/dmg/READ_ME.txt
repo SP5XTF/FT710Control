@@ -90,13 +90,15 @@ e) WSJT-X / JTDX (optional):
 
 6. WHAT'S NEW IN THIS VERSION - worth checking
 ----------------------------------------------
-- Configuration (Cmd-,) has new sections: DX Cluster (node, login, filters), FT8/FT4 (sequence
-  options, PSKReporter) and CW - keying (port line or the radio's keyer, radio check).
-- CAT Share: several programs at once without cutting each other's transmission - the radio stops
-  transmitting only when no program holds PTT; a "PTT off" from another program no longer cuts FT8,
-  RTTY or the SWR sweep in FT-710 Control either.
-- Earlier (0.9.6): RF scope with nothing to install (built-in FTDI libraries), the Configuration
-  window, listening filter with notches, fixed tuning from cluster and POTA spots.
+- Monitoring while transmitting: the filters (AI, noise reduction, level evening) are frozen while
+  the radio transmits from any source; after transmitting the audio returns smoothly, with no loud
+  noise burst in the headphones.
+- Menus in the program's language: the system menus (File, Edit, Window…) follow the macOS language
+  or the language chosen in the program (after a restart); the program's own items change at once.
+- The scope library message is no longer cut off (full text on hover).
+- Configuration: DX Cluster, FT8/FT4 and CW keying sections; CAT Share: programs no longer cut each
+  other's transmissions.
+- Earlier (0.9.6): RF scope with nothing to install, the Configuration window, listening filter.
 
 7. REPORTING BUGS
 -----------------

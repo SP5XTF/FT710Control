@@ -5,6 +5,7 @@
 # Użycie:   ./make_dmg.sh                -> dist/FT710Control-<wersja>.dmg (np. FT710Control-0.9.0-beta.dmg)
 #           ./make_dmg.sh --universal    -> wersja dla Maców Apple Silicon i Intel (wymaga pełnego Xcode)
 #           ./make_dmg.sh --no-build     -> bez ponownej kompilacji (z istniejącego build/FT710Control.app)
+#           ./make_dmg.sh --no-ftdi      -> świadomie BEZ bibliotek FTDI (skop nie zadziała bez ręcznej instalacji)
 # Kontakt w instrukcji:  FT710_CONTACT="SP5XTF, adres@example.com" ./make_dmg.sh
 set -euo pipefail
 cd "$(dirname "$0")"
@@ -16,10 +17,12 @@ DATE=$(date +%Y-%m-%d)
 
 BUILD=1
 BUILD_ARGS=()
+REQUIRE_FTDI=1
 for arg in "$@"; do
     case "${arg}" in
         --no-build) BUILD=0 ;;
         --universal) BUILD_ARGS=(--universal) ;;
+        --no-ftdi) REQUIRE_FTDI=0 ;;
         *) echo "Nieznana opcja: ${arg}" >&2; exit 1 ;;
     esac
 done
@@ -31,6 +34,27 @@ APP="build/${APP_NAME}.app"
 if [[ ! -d "${APP}" ]]; then
     echo "Brak ${APP} - uruchom bez --no-build albo najpierw ./build_app.sh" >&2
     exit 1
+fi
+
+# Wydanie bez bibliotek FTDI = skop nie działa u użytkowników (zgłoszenie testera, 0.9.8). Bez nich obraz się
+# NIE buduje, chyba że świadomie --no-ftdi.
+FW="${APP}/Contents/Frameworks"
+if [[ "${REQUIRE_FTDI}" == "1" ]]; then
+    missing=()
+    for f in libft4222.dylib libftd2xx.dylib FTDI-Driver-Licence.txt; do
+        [[ -s "${FW}/${f}" ]] || missing+=("${f}")
+    done
+    if (( ${#missing[@]} > 0 )); then
+        echo "" >&2
+        echo "BŁĄD: w aplikacji brakuje: ${missing[*]}" >&2
+        echo "  Skop RF nie zadziała u użytkowników. Sprawdź:" >&2
+        echo "  1) Design/FTDI/FTDI-Driver-Licence.txt - pełny tekst licencji FTDI" >&2
+        echo "     (https://ftdichip.com/driver-licence-terms-details/), dodany do repozytorium," >&2
+        echo "  2) biblioteki libft4222*.dylib i libftd2xx*.dylib w /usr/local/lib (albo FTDI_LIB_DIR=...)." >&2
+        echo "  Potem ./make_dmg.sh ponownie. Świadomie bez bibliotek: ./make_dmg.sh --no-ftdi" >&2
+        exit 1
+    fi
+    echo "==> Biblioteki FTDI w aplikacji: OK ($(ls "${FW}" | tr '\n' ' '))"
 fi
 
 # Dla jakich Maców jest ten obraz (wpisywane do instrukcji)

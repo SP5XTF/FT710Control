@@ -3,7 +3,7 @@ import Foundation
 /// Format ADIF (plik .adi): zapis i odczyt.
 /// Pole: <NAZWA:długość>wartość, rekord kończy <EOR>, nagłówek kończy <EOH>.
 enum ADIF {
-    static let programVersion = "0.9.8-beta"
+    static let programVersion = "0.9.9-beta"
 
     /// Pola mapowane na właściwości QSO - reszta trafia do `extra`.
     static let knownFields: Set<String> = [
